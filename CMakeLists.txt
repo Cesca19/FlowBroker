@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(CppProjectBase VERSION 0.0.1 LANGUAGES CXX)
+project(FlowBroker VERSION 0.0.1 LANGUAGES CXX)
 
 # --- Runtime link selection ---
 if (NOT DEFINED RUNTIME_LINK)
@@ -51,20 +51,27 @@ if(UNIX AND NOT APPLE)
     endif()
 endif()
 
-# --- SFML (via Conan) ---
+#  (via Conan) ---
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/generators")
-find_package(SFML REQUIRED COMPONENTS system window graphics)
+# find_package(SFML REQUIRED COMPONENTS system window graphics)
 
 # --- Output directories ---
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)
 
-# --- Executable setup ---
-set(MY_TARGET cpp_project_base)
-add_executable(${MY_TARGET} src/main.cpp)
-target_compile_features(${MY_TARGET} PRIVATE cxx_std_17)
-target_link_libraries(${MY_TARGET} PUBLIC sfml::sfml)
+# --- Server Executable setup ---
+set(SERVER FlowBrokerServer)
+add_executable(${SERVER}
+        src/server/main.cpp)
+target_compile_features(${SERVER} PRIVATE cxx_std_17)
+# target_link_libraries(${SERVER} PUBLIC sfml::sfml)
+
+# --- Client Executable setup ---
+set(CLIENT FlowBrokerClient)
+add_executable(${CLIENT} src/client/main.cpp
+        src/client/main.cpp)
+target_compile_features(${CLIENT} PRIVATE cxx_std_17)
 
 # --- Install required system libraries for dynamic runtime on Windows ---
 if (MSVC AND RUNTIME_LINK STREQUAL "dynamic")
