@@ -1,0 +1,77 @@
+name: Build, Test and Release
+
+on:
+  push:
+    branches:
+      - main           # Build/test only if commit message contains [build]
+    tags:
+      - 'v*'           # Trigger release when pushing a version tag
+
+permissions:
+  contents: write
+
+jobs:
+  build_and_test:
+    name: Build and Test Executable (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    # Run only on main with [build] in commit message OR on version tag
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[build]') || startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          # Conan 2.x cache directory (Conan 1.x uses ~/.conan)
+          path: ~/.conan2
+          # The cache key depends on OS and conanfile.txt hash
+          key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-conan-
+
+      - name: Install build tools
+        uses: ./.github/actions/install_tools
+
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/build_windows
+
+      - name: Build Linux
+        if: runner.os == 'Linux'
+        uses: ./.github/actions/build_linux
+
+      - name: Run quick test
+        uses: ./.github/actions/run_tests
+
+      - name: Compress build artifacts
+        uses: ./.github/actions/compress_artifacts
+
+      - name: Upload compressed artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }}-build
+          path: |
+            CppProjectBaseApp-*.zip
+            CppProjectBaseApp-*.tar.gz
+          if-no-files-found: warn 
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build_and_test
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Publish release
+        uses: ./.github/actions/publish_release
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

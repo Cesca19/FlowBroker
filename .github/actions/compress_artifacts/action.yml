@@ -1,0 +1,14 @@
+name: Compress Build Artifacts
+description: Compress the bin folder into versioned archive per OS
+runs:
+  using: "composite"
+  steps:
+    - name: Compress Windows build
+      if: runner.os == 'Windows'
+      run: powershell Compress-Archive -Path bin -DestinationPath "CppProjectBaseApp-${{ github.ref_name }}-Windows.zip"
+      shell: cmd
+
+    - name: Compress Linux build
+      if: runner.os == 'Linux'
+      run: tar -czf "CppProjectBaseApp-${{ github.ref_name }}-Linux.tar.gz" bin
+      shell: bash

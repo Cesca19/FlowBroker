@@ -1,0 +1,6 @@
+/.conan_install_dir
+/build
+/bin
+/.conan_venv
+/.idea
+/.vscode
