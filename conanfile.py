@@ -1,7 +1,8 @@
 import os
 from conan import ConanFile
 from conan.tools.files import copy
-
+import glob
+import subprocess
 
 class FlowBrokerConanProject(ConanFile):
     name = "conan_project"
@@ -59,7 +60,7 @@ class FlowBrokerConanProject(ConanFile):
         self.folders.generators = "build/generators"
 
     def generate(self):
-        """Copy dependency shared libraries next to the final executable."""
+        """Copy dependency shared libraries and Qt plugins next to the executable."""
         exe_dir = os.path.join(self.source_folder, "bin")
         os.makedirs(exe_dir, exist_ok=True)
         for dep in self.dependencies.values():
@@ -68,3 +69,27 @@ class FlowBrokerConanProject(ConanFile):
                 copy(self, "*.dylib", src=lib_path, dst=exe_dir)  # macOS
             for bin_path in dep.cpp_info.bindirs:
                 copy(self, "*.dll", src=bin_path, dst=exe_dir)   # Windows
+
+            if dep.ref.name == "qt" and dep.package_folder:
+                platforms_dir = os.path.join(dep.package_folder, "plugins", "platforms")
+                if os.path.isdir(platforms_dir):
+                    copy(self, "*.so*", src=platforms_dir, dst=os.path.join(exe_dir, "platforms"))
+
+        # --- All files are copied by now; fix the plugins' RPATH (Linux only) ---
+        # The platform plugins live in bin/platforms/ but their Qt dependencies
+        # (libQt6XcbQpa, libQt6Gui...) live one level up in bin/. Teach each
+        # plugin to look in $ORIGIN/.. so the loader resolves them at runtime.
+        platforms_dst = os.path.join(exe_dir, "platforms")
+        if os.path.isdir(platforms_dst):
+            for so in glob.glob(os.path.join(platforms_dst, "*.so*")):
+                try:
+                    subprocess.run(
+                        ["patchelf", "--set-rpath", "$ORIGIN/..", so],
+                        check=True,
+                    )
+                    self.output.info(f"Patched RPATH of {os.path.basename(so)} -> $ORIGIN/..")
+                except FileNotFoundError:
+                    self.output.warning("patchelf not installed; skipping RPATH patch")
+                    break
+                except Exception as e:
+                    self.output.warning(f"patchelf failed on {so}: {e}")

@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.28)
 project(FlowBroker VERSION 0.0.1 LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTOMOC ON)
+
 # --- Runtime link selection ---
 if (NOT DEFINED RUNTIME_LINK)
     message(STATUS "RUNTIME_LINK not defined, defaulting to 'dynamic'")
@@ -53,7 +57,8 @@ endif()
 
 #  (via Conan) ---
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/generators")
-# find_package(SFML REQUIRED COMPONENTS system window graphics)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Boost REQUIRED)
 
 # --- Output directories ---
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
@@ -61,17 +66,17 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)
 
 # --- Server Executable setup ---
-set(SERVER FlowBrokerServer)
+set(SERVER flow_broker_server)
 add_executable(${SERVER}
         src/server/main.cpp)
 target_compile_features(${SERVER} PRIVATE cxx_std_17)
-# target_link_libraries(${SERVER} PUBLIC sfml::sfml)
+target_include_directories(${SERVER} PRIVATE ${Boost_INCLUDE_DIRS})
 
 # --- Client Executable setup ---
-set(CLIENT FlowBrokerClient)
-add_executable(${CLIENT} src/client/main.cpp
-        src/client/main.cpp)
+set(CLIENT flow_broker_client)
+add_executable(${CLIENT} src/client/main.cpp)
 target_compile_features(${CLIENT} PRIVATE cxx_std_17)
+target_link_libraries(${CLIENT} PRIVATE Qt6::Widgets)
 
 # --- Install required system libraries for dynamic runtime on Windows ---
 if (MSVC AND RUNTIME_LINK STREQUAL "dynamic")
