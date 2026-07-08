@@ -83,7 +83,7 @@ if %RUNTIME_LINK%==static (
 ) else (
     set IS_SHARED=True
 )
-conan install . --settings=build_type=%BUILD_TYPE% -s compiler.runtime=%RUNTIME_LINK% --build=missing -o isShared=%IS_SHARED%
+conan install . --settings=build_type=%BUILD_TYPE% -s compiler.cppstd=17 -s compiler.runtime=%RUNTIME_LINK% --build=missing -o isShared=%IS_SHARED%
 if %errorlevel% neq 0 (
     echo %red%[ERROR] Conan install failed.%white%
     exit /b 1

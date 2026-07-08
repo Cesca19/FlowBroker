@@ -74,7 +74,8 @@ class FlowBrokerConanProject(ConanFile):
                 platforms_dir = os.path.join(dep.package_folder, "plugins", "platforms")
                 if os.path.isdir(platforms_dir):
                     copy(self, "*.so*", src=platforms_dir, dst=os.path.join(exe_dir, "platforms"))
-
+                    copy(self, "*.dll", src=platforms_dir, dst=os.path.join(exe_dir, "platforms"))
+                    copy(self, "*.dylib", src=platforms_dir, dst=os.path.join(exe_dir, "platforms"))
         # --- All files are copied by now; fix the plugins' RPATH (Linux only) ---
         # The platform plugins live in bin/platforms/ but their Qt dependencies
         # (libQt6XcbQpa, libQt6Gui...) live one level up in bin/. Teach each

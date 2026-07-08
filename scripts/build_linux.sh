@@ -276,7 +276,7 @@ log_success "Conan profile successfully configured."
 
 # --- Conan dependency installation ---
 log_info "Installing dependencies with Conan (${BUILD_TYPE}, ${RUNTIME_LINK})"
-if ! conan install . -s build_type=${BUILD_TYPE} -o isShared=${IS_SHARED} --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True; then
+if ! conan install . -s compiler.cppstd=17 -s build_type=${BUILD_TYPE} -o isShared=${IS_SHARED} --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True; then
     log_error "Conan dependency installation failed."
     exit 1
 fi
