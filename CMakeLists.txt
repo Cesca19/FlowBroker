@@ -59,6 +59,7 @@ endif()
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/generators")
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Boost REQUIRED)
+find_package(Threads REQUIRED)
 
 # --- Output directories ---
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
@@ -70,7 +71,7 @@ set(SERVER flow_broker_server)
 add_executable(${SERVER}
         src/server/main.cpp)
 target_compile_features(${SERVER} PRIVATE cxx_std_17)
-target_include_directories(${SERVER} PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)
 
 # --- Client Executable setup ---
 set(CLIENT flow_broker_client)

@@ -35,6 +35,10 @@ class FlowBrokerConanProject(ConanFile):
         "qt/*:with_pq": False,
         "qt/*:with_mysql": False,
         "qt/*:with_odbc": False,
+
+        # We only use header-only Boost (Asio), so build Boost
+        # with no compiled libraries at all. Nothing to link, nothing to copy.
+        "boost/*:header_only": True,
     }
 
     def requirements(self):
