@@ -71,7 +71,8 @@ set(SERVER flow_broker_server)
 add_executable(${SERVER}
         src/server/main.cpp
         src/server/GeometricBrownianMotion.cpp
-    )
+        src/server/SimulatedFinancialAsset.cpp
+)
 target_compile_features(${SERVER} PRIVATE cxx_std_17)
 target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)
 
