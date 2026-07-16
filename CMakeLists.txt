@@ -69,7 +69,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)
 # --- Server Executable setup ---
 set(SERVER flow_broker_server)
 add_executable(${SERVER}
-        src/server/main.cpp)
+        src/server/main.cpp
+        src/server/GeometricBrownianMotion.cpp
+    )
 target_compile_features(${SERVER} PRIVATE cxx_std_17)
 target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)
 
