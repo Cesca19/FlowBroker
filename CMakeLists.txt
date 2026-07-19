@@ -72,6 +72,8 @@ add_executable(${SERVER}
         src/server/main.cpp
         src/server/GeometricBrownianMotion.cpp
         src/server/SimulatedFinancialAsset.cpp
+        src/server/SimulatedDataSource.cpp
+        src/server/SimulatedFinanceDataSource.cpp
 )
 target_compile_features(${SERVER} PRIVATE cxx_std_17)
 target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)

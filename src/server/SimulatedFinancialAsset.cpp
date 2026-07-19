@@ -29,7 +29,12 @@ double SimulatedFinancialAsset::getCurrentPrice() const
     return m_currentPrice;
 }
 
-void SimulatedFinancialAsset::initGaussianFunctionGenerator(double mean, double standardDeviation)
+std::string SimulatedFinancialAsset::getName() const
+{
+    return m_name;
+}
+
+void SimulatedFinancialAsset::initGaussianFunctionGenerator(const double mean, const double standardDeviation)
 {
     // It is a uniformly-distributed integer random number generator that produces non-deterministic random numbers
     std::random_device randomDevice{};

@@ -12,6 +12,7 @@ public:
     SimulatedFinancialAsset(const FinancialAssetConfig& config);
     double getNextPrice();
     double getCurrentPrice() const;
+    std::string getName() const;
 private:
     void initGaussianFunctionGenerator(double mean = 0.0, double standardDeviation = 1.0);
     double getGaussianRandomValue();
