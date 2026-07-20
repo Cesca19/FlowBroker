@@ -82,7 +82,7 @@ target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)
 set(CLIENT flow_broker_client)
 add_executable(${CLIENT} src/client/main.cpp)
 target_compile_features(${CLIENT} PRIVATE cxx_std_17)
-target_link_libraries(${CLIENT} PRIVATE Qt6::Widgets)
+target_link_libraries(${CLIENT} PRIVATE Qt6::Widgets Boost::boost)
 
 # --- Install required system libraries for dynamic runtime on Windows ---
 if (MSVC AND RUNTIME_LINK STREQUAL "dynamic")

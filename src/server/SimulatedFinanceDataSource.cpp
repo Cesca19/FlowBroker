@@ -15,10 +15,10 @@ Message SimulatedFinanceDataSource::generateMessage()
 {
     const double nextPrice = m_simulatedFinancialAsset.getNextPrice();
     Message message {
-        .type = StreamType::FINANCE,
-        .topic = m_simulatedFinancialAsset.getName(),
-        .values = std::vector<double>{nextPrice},
-        .timestampNs = getCurrentTimeAsNanoseconds(),
+        StreamType::FINANCE,
+        m_simulatedFinancialAsset.getName(),
+        std::vector<double>{nextPrice},
+        getCurrentTimeAsNanoseconds()
     };
     return message;
 }
