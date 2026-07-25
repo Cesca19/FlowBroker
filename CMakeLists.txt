@@ -70,10 +70,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)
 set(SERVER flow_broker_server)
 add_executable(${SERVER}
         src/server/main.cpp
-        src/server/GeometricBrownianMotion.cpp
-        src/server/SimulatedFinancialAsset.cpp
-        src/server/SimulatedDataSource.cpp
-        src/server/SimulatedFinanceDataSource.cpp
+        src/server/data_sources/SimulatedDataSource.cpp
+        src/server/data_sources/finance/SimulatedFinancialAsset.cpp
+        src/server/data_sources/finance/SimulatedFinanceDataSource.cpp
+        src/server/pipeline/MessageCatalog.cpp
+        src/server/pipeline/MessageProducer.cpp
 )
 target_compile_features(${SERVER} PRIVATE cxx_std_17)
 target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)

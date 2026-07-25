@@ -5,7 +5,7 @@
 #include "SimulatedFinanceDataSource.hpp"
 
 SimulatedFinanceDataSource::SimulatedFinanceDataSource(boost::asio::io_context &ioContext,
-    const boost::asio::chrono::milliseconds periodInMilliseconds, const FinancialAssetConfig &config)
+                                                       const boost::asio::chrono::milliseconds periodInMilliseconds, const FinancialAssetConfig &config)
     : SimulatedDataSource(ioContext, periodInMilliseconds)
     , m_simulatedFinancialAsset(config)
 {

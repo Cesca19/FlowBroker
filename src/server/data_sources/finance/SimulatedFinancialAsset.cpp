@@ -6,7 +6,6 @@
 
 SimulatedFinancialAsset::SimulatedFinancialAsset(const FinancialAssetConfig &config)
     : m_name(config.name),
-      m_initialPrice(config.initialPrice),
       m_currentPrice(config.initialPrice),
       m_drift(config.drift),
       m_volatility(config.volatility)
@@ -16,10 +15,11 @@ SimulatedFinancialAsset::SimulatedFinancialAsset(const FinancialAssetConfig &con
 
 double SimulatedFinancialAsset::getNextPrice()
 {
-    double deterministicPart = m_drift - (std::pow(m_volatility, 2) / 2);
-    double stochasticPart = getGaussianRandomValue() * m_volatility;
-    double step = deterministicPart  + stochasticPart;
-    double nextPrice = m_currentPrice * std::exp(step);
+    // generate prices using geometric brownian motion
+    const double deterministicPart = m_drift - (std::pow(m_volatility, 2) / 2);
+    const double stochasticPart = getGaussianRandomValue() * m_volatility;
+    const double step = deterministicPart  + stochasticPart;
+    const double nextPrice = m_currentPrice * std::exp(step);
     m_currentPrice = nextPrice;
     return nextPrice;
 }

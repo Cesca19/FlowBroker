@@ -5,7 +5,7 @@
 #ifndef FLOWBROKER_SIMULATEDFINANCEDATASOURCE_HPP
 #define FLOWBROKER_SIMULATEDFINANCEDATASOURCE_HPP
 
-#include "SimulatedDataSource.hpp"
+#include "../SimulatedDataSource.hpp"
 #include "SimulatedFinancialAsset.hpp"
 
 class SimulatedFinanceDataSource : public SimulatedDataSource {

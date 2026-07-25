@@ -5,7 +5,8 @@
 #ifndef FLOWBROKER_SIMULATEDFINANCIALASSET_HPP
 #define FLOWBROKER_SIMULATEDFINANCIALASSET_HPP
 
-#include "GeometricBrownianMotion.hpp"
+#include <random>
+#include "FinancialAssetConfig.hpp"
 
 class SimulatedFinancialAsset {
 public:
@@ -18,7 +19,6 @@ private:
     double getGaussianRandomValue();
 
     std::string m_name;
-    double m_initialPrice;
     double m_currentPrice;
     double m_drift;
     double m_volatility;
