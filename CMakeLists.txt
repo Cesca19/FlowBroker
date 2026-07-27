@@ -76,9 +76,9 @@ add_executable(${SERVER}
         src/server/pipeline/MessageCatalog.cpp
         src/server/pipeline/MessageProducer.cpp
         src/server/pipeline/MessageConsumer.cpp
-        src/server/pipeline/TopicState.cpp
-        src/server/pipeline/TopicCache.cpp
-        src/server/pipeline/Server.cpp
+        src/server/topics/TopicState.cpp
+        src/server/topics/TopicCache.cpp
+        src/server/network/Server.cpp
 )
 target_compile_features(${SERVER} PRIVATE cxx_std_17)
 target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)

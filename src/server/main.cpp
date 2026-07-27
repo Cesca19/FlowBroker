@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include "pipeline/MessageConsumer.hpp"
-#include "pipeline/Server.hpp"
+#include "network/Server.hpp"
 
 int main()
 {

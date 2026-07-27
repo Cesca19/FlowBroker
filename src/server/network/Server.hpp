@@ -5,8 +5,8 @@
 #ifndef FLOWBROKER_SERVER_HPP
 #define FLOWBROKER_SERVER_HPP
 
-#include "TopicCache.hpp"
-#include "MessageProducer.hpp"
+#include "../topics/TopicCache.hpp"
+#include "../pipeline/MessageProducer.hpp"
 
 class Server {
 public:

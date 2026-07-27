@@ -5,7 +5,7 @@
 #ifndef FLOWBROKER_MESSAGECONSUMER_HPP
 #define FLOWBROKER_MESSAGECONSUMER_HPP
 
-#include "TopicCache.hpp"
+#include "../topics/TopicCache.hpp"
 #include "MessageCatalog.hpp"
 
 class MessageConsumer {
