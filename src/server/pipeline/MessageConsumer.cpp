@@ -3,10 +3,10 @@
 //
 
 #include "MessageConsumer.hpp"
-#include <iostream>
 
-MessageConsumer::MessageConsumer(MessageCatalog &catalog)
+MessageConsumer::MessageConsumer(MessageCatalog &catalog, TopicCache& topicCache)
     : m_messageCatalog(catalog)
+    , m_topicCache(topicCache)
 {
 }
 
@@ -21,7 +21,11 @@ void MessageConsumer::run()
     }
 }
 
-void MessageConsumer::processMessage(const Message &message)
+void MessageConsumer::processMessage(const Message &message) const
 {
-    std::cout << "Message to process about topic: " << message.topic << std::endl;
+    if (message.values.empty())
+        return; // nothing to record
+    // for now we only handle messages with one value
+    // later we migt handle the cache like topic-value0 topic-value1 etc so we will have multiple topic states by Topic
+    m_topicCache.addTopicSample(message.topic, message.values[0], message.timestampNs);
 }

@@ -11,8 +11,10 @@ int main()
     std::cout << "Hello from the server !" << std::endl;
     boost::asio::io_context ioContext;
     MessageCatalog messageCatalog;
-    Server server(ioContext, messageCatalog);
-    MessageConsumer messageConsumer(messageCatalog);
+    TopicCache topicCache;
+
+    Server server(ioContext, messageCatalog, topicCache);
+    MessageConsumer messageConsumer(messageCatalog, topicCache);
 
     std::thread m_consumerThread(&MessageConsumer::run, &messageConsumer);
     std::thread m_serverThread(&Server::run, &server);

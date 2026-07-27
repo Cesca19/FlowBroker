@@ -5,16 +5,18 @@
 #ifndef FLOWBROKER_MESSAGECONSUMER_HPP
 #define FLOWBROKER_MESSAGECONSUMER_HPP
 
+#include "TopicCache.hpp"
 #include "MessageCatalog.hpp"
 
 class MessageConsumer {
 public:
-    MessageConsumer(MessageCatalog& catalog);
+    MessageConsumer(MessageCatalog& catalog, TopicCache& topicCache);
     void run();
 private:
-    void processMessage(const Message& message);
+    void processMessage(const Message& message) const;
 
     MessageCatalog& m_messageCatalog;
+    TopicCache& m_topicCache;
 };
 
 

@@ -4,11 +4,16 @@
 
 #include "Server.hpp"
 
-Server::Server(boost::asio::io_context &ioContext, MessageCatalog &catalog)
+#include <iostream>
+
+Server::Server(boost::asio::io_context &ioContext, MessageCatalog &catalog, TopicCache &topicCache)
     : m_ioContext(ioContext)
     , m_signals(ioContext, SIGINT)
     , m_messageCatalog(catalog)
+    , m_topicCache(topicCache)
     , m_messageProducer(ioContext, m_messageCatalog)
+    , m_dashBoardRefreshTimer(ioContext)
+    , m_refreshTime(1)
 {
 }
 
@@ -18,12 +23,32 @@ void Server::run()
     m_signals.async_wait([this](const boost::system::error_code&, int) {
         stop();   // Ctrl+C pressed
     });
+    m_dashBoardRefreshTimer.expires_after(m_refreshTime);
+    m_dashBoardRefreshTimer.async_wait(std::bind(&Server::refreshTopicsDashBoard, this, std::placeholders::_1));
     m_ioContext.run();
 }
 
 void Server::stop()
 {
     m_messageProducer.stop();
+    m_dashBoardRefreshTimer.cancel();
     m_ioContext.stop();
     m_messageCatalog.stop();
+}
+
+void Server::refreshTopicsDashBoard(const boost::system::error_code &error)
+{
+    if (error) {
+        std::cerr << "Error in timer refresh: " << error.message() << std::endl;
+        return;
+    }
+
+    const std::vector<TopicSnapshot> topicSnapshots = m_topicCache.getAllTopicsSnapshot();
+
+    for (const auto&[topicName, lastValue, average, min, max] : topicSnapshots) {
+        std::cout << "Topic " << topicName << ": value { " << lastValue << " } average { " <<
+            average << " } min { " << min << " } max { " << max << " }"  << std::endl;
+    }
+    m_dashBoardRefreshTimer.expires_at(m_dashBoardRefreshTimer.expiry() + m_refreshTime);
+    m_dashBoardRefreshTimer.async_wait(std::bind(&Server::refreshTopicsDashBoard, this, std::placeholders::_1));
 }

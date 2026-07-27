@@ -76,6 +76,8 @@ add_executable(${SERVER}
         src/server/pipeline/MessageCatalog.cpp
         src/server/pipeline/MessageProducer.cpp
         src/server/pipeline/MessageConsumer.cpp
+        src/server/pipeline/TopicState.cpp
+        src/server/pipeline/TopicCache.cpp
         src/server/pipeline/Server.cpp
 )
 target_compile_features(${SERVER} PRIVATE cxx_std_17)
