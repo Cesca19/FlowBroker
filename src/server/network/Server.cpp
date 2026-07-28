@@ -3,10 +3,9 @@
 //
 
 #include "Server.hpp"
-
 #include <iostream>
 
-Server::Server(boost::asio::io_context &ioContext, MessageCatalog &catalog, TopicCache &topicCache)
+Server::Server(boost::asio::io_context &ioContext, MessageCatalog &catalog, TopicCache &topicCache, const int tcpPort)
     : m_ioContext(ioContext)
     , m_signals(ioContext, SIGINT)
     , m_messageCatalog(catalog)
@@ -14,6 +13,7 @@ Server::Server(boost::asio::io_context &ioContext, MessageCatalog &catalog, Topi
     , m_messageProducer(ioContext, m_messageCatalog)
     , m_dashBoardRefreshTimer(ioContext)
     , m_refreshTime(1)
+    , m_tcpServer(ioContext, tcpPort)
 {
 }
 
@@ -25,6 +25,7 @@ void Server::run()
     });
     m_dashBoardRefreshTimer.expires_after(m_refreshTime);
     m_dashBoardRefreshTimer.async_wait(std::bind(&Server::refreshTopicsDashBoard, this, std::placeholders::_1));
+    m_tcpServer.run();
     m_ioContext.run();
 }
 
