@@ -10,7 +10,7 @@
 
 class SimulatedFinancialAsset {
 public:
-    SimulatedFinancialAsset(const FinancialAssetConfig& config);
+    SimulatedFinancialAsset(const FinancialAssetConfig& config, double deltaTimeInSeconds);
     double getNextPrice();
     double getCurrentPrice() const;
     std::string getName() const;
@@ -22,6 +22,7 @@ private:
     double m_currentPrice;
     double m_drift;
     double m_volatility;
+    double m_deltaTime;
     std::mt19937 m_randomEngine;
     std::normal_distribution<double> m_normalDistribution;
 };

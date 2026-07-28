@@ -7,7 +7,7 @@
 SimulatedFinanceDataSource::SimulatedFinanceDataSource(boost::asio::io_context &ioContext,
                                                        const boost::asio::chrono::milliseconds periodInMilliseconds, const FinancialAssetConfig &config)
     : SimulatedDataSource(ioContext, periodInMilliseconds)
-    , m_simulatedFinancialAsset(config)
+    , m_simulatedFinancialAsset(config, periodInMilliseconds.count() / 1000.0)
 {
 }
 

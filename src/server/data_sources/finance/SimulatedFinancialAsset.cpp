@@ -4,20 +4,24 @@
 
 #include "SimulatedFinancialAsset.hpp"
 
-SimulatedFinancialAsset::SimulatedFinancialAsset(const FinancialAssetConfig &config)
-    : m_name(config.name),
-      m_currentPrice(config.initialPrice),
-      m_drift(config.drift),
-      m_volatility(config.volatility)
+SimulatedFinancialAsset::SimulatedFinancialAsset(const FinancialAssetConfig &config, const double deltaTimeInSeconds)
+    : m_name(config.name)
+    , m_currentPrice(config.initialPrice)
+    , m_drift(config.drift)
+    , m_volatility(config.volatility)
+    , m_deltaTime(deltaTimeInSeconds)
 {
     initGaussianFunctionGenerator();
 }
 
 double SimulatedFinancialAsset::getNextPrice()
 {
-    // generate prices using geometric brownian motion
-    const double deterministicPart = m_drift - (std::pow(m_volatility, 2) / 2);
-    const double stochasticPart = getGaussianRandomValue() * m_volatility;
+    // generate prices using geometric brownian motion discretized over a time step m_deltaTime.
+    // Scaling both terms by the step makes the dynamics independent of the tick
+    // rate: drift scales with dt, the random shock with sqrt(dt) (variance grows
+    // linearly with time, so standard deviation grows with its square root).
+    const double deterministicPart = (m_drift - (std::pow(m_volatility, 2) / 2)) * m_deltaTime;
+    const double stochasticPart = getGaussianRandomValue() * m_volatility * std::sqrt(m_deltaTime);
     const double step = deterministicPart  + stochasticPart;
     const double nextPrice = m_currentPrice * std::exp(step);
     m_currentPrice = nextPrice;
