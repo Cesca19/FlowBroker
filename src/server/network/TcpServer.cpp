@@ -20,6 +20,10 @@ void TcpServer::run()
 void TcpServer::startAccept()
 {
     std::shared_ptr<TcpConnection> newConnection = TcpConnection::create(m_ioContext);
+
+    newConnection->initCallbacks(std::bind(&TcpServer::onMessageReceived, this, std::placeholders::_1, std::placeholders::_2),
+        std::bind(&TcpServer::removeConnection, this, std::placeholders::_1),
+        std::bind(&TcpServer::onConnectionError, this, std::placeholders::_1, std::placeholders::_2));
     m_acceptor.async_accept(newConnection->getSocket(),
         std::bind(&TcpServer::handleAccept, this, newConnection, boost::asio::placeholders::error));
 }
@@ -28,7 +32,35 @@ void TcpServer::handleAccept(const std::shared_ptr<TcpConnection> &newConnection
 {
     if (error)
         std::cerr << "Error in new connection accept handling" << error.message() << std::endl;
-    else
+    else {
+        addConnection(newConnection);
         newConnection->start();
+    }
     startAccept();
+}
+
+void TcpServer::addConnection(const std::shared_ptr<TcpConnection> &newConnection)
+{
+    m_activeConnections.insert(newConnection);
+    std::cout << "New client connected, we have " << m_activeConnections.size() << " active client(s) so far" << std::endl;
+}
+
+void TcpServer::removeConnection(const std::shared_ptr<TcpConnection> &connectionToRemove)
+{
+    const auto it = m_activeConnections.find(connectionToRemove);
+    if (it != m_activeConnections.end())
+        m_activeConnections.erase(it);
+    std::cout << "After a client disconnection we have " << m_activeConnections.size() << " client(s) remaining" << std::endl;
+}
+
+void TcpServer::onMessageReceived(const std::shared_ptr<TcpConnection> &connection, const std::string &message)
+{
+    std::cout << "TcpServer received the following message: " << message << std::endl;
+}
+
+void TcpServer::onConnectionError(const std::shared_ptr<TcpConnection> &connection,
+    const boost::system::error_code &error)
+{
+    if (error)
+        std::cerr << "TcpServer connection error: " << error.message() << std::endl;
 }

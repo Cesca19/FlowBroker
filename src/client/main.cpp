@@ -17,15 +17,19 @@ void tcp_client(const std::string& host, std::string port)
         boost::asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(host, port);
         boost::asio::ip::tcp::socket socket(io_context);
         boost::asio::connect(socket, endpoints);
+
+        std::cout << "Connected, waiting for data..." << std::endl;
         for (;;) {
             std::array<char, 128> buf;
             boost::system::error_code error;
             size_t len = socket.read_some(boost::asio::buffer(buf), error);
-            if (error == boost::asio::error::eof)
+            if (error == boost::asio::error::eof) {
+                std::cout << "Connection closed by the server" << std::endl;
                 break; // Connection closed cleanly by peer.
-            else if (error)
+            } else if (error)
                 throw boost::system::system_error(error); // Some other error.
             std::cout.write(buf.data(), len);
+            std::cout.flush();
         }
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
