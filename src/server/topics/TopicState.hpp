@@ -23,6 +23,7 @@ public:
     double average() const;
     double lastValue() const;
     std::string name() const;
+    std::uint64_t lastTimestampNs() const;
 private:
     std::string m_topicName;
     int m_recentSamplesDurationInSec;

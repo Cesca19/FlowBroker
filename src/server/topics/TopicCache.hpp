@@ -12,6 +12,7 @@
 
 struct TopicSnapshot {
     std::string topicName;
+    std::uint64_t timestampNs;
     double lastValue;
     double average;
     double min;

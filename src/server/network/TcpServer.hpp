@@ -14,6 +14,7 @@ public:
     void run();
     void startAccept();
     void handleAccept(const std::shared_ptr<TcpConnection> &newConnection, const boost::system::error_code &error);
+    void sendMessageToAllClients(const std::string &messageToSend) const;
 private:
     void addConnection(const std::shared_ptr<TcpConnection> &newConnection);
     void removeConnection(const std::shared_ptr<TcpConnection> &connectionToRemove);

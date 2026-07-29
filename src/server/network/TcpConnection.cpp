@@ -16,9 +16,7 @@ boost::asio::ip::tcp::socket & TcpConnection::getSocket()
 
 void TcpConnection::start()
 {
-    m_messageToSend = "New client accepted by the server\n";
-    boost::asio::async_write(m_socket, boost::asio::buffer(m_messageToSend),
-        std::bind(&TcpConnection::handleWrite, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+    sendMessage("New client accepted by the server\n");
     m_socket.async_read_some(boost::asio::buffer(m_messageToRead),
         std::bind(&TcpConnection::handleRead, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
@@ -34,8 +32,18 @@ void TcpConnection::initCallbacks(std::function<void(std::shared_ptr<TcpConnecti
 
 void TcpConnection::sendMessage(const std::string &messageToSend)
 {
-    m_messageToSend = messageToSend;
-    boost::asio::async_write(m_socket, boost::asio::buffer(m_messageToSend),
+    if (m_messagesToSend.empty()) {
+        m_messagesToSend.push(messageToSend);
+        sendNextMessage();
+    }
+    else
+        m_messagesToSend.push(messageToSend);
+}
+
+void TcpConnection::sendNextMessage()
+{
+    if (!m_messagesToSend.empty())
+        boost::asio::async_write(m_socket, boost::asio::buffer(m_messagesToSend.front()),
         std::bind(&TcpConnection::handleWrite, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
@@ -50,7 +58,15 @@ TcpConnection::TcpConnection(boost::asio::io_context &ioContext)
 
 void TcpConnection::handleWrite(const boost::system::error_code &error, size_t bytes_transferred)
 {
-    m_messageToSend.clear();
+    if (error && m_onError) {
+        m_onError(shared_from_this(), error);
+        return;
+    }
+    if (error)
+        return;
+    m_messagesToSend.pop();
+    if (!m_messagesToSend.empty())
+        sendNextMessage();
 }
 
 void TcpConnection::handleRead(const boost::system::error_code &error, size_t bytes_transferred)

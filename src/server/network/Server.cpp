@@ -46,10 +46,14 @@ void Server::refreshTopicsDashBoard(const boost::system::error_code &error)
 
     const std::vector<TopicSnapshot> topicSnapshots = m_topicCache.getAllTopicsSnapshot();
 
-    for (const auto&[topicName, lastValue, average, min, max] : topicSnapshots) {
-        std::cout << "Topic " << topicName << ": value { " << lastValue << " } average { " <<
-            average << " } min { " << min << " } max { " << max << " }"  << std::endl;
+    std::string messageToSend;
+    for (const auto&[topicName, timeStampNs, lastValue, average, min, max] : topicSnapshots) {
+        const std::string topicMessage = "At " + std::to_string(timeStampNs) + " ns Topic " + topicName + ": value { " + std::to_string(lastValue) + " } average { " +
+            std::to_string(average) + " } min { " + std::to_string(min) + " } max { " + std::to_string(max) + " }\n";
+        std::cout << topicMessage;
+        messageToSend += topicMessage;
     }
+    m_tcpServer.sendMessageToAllClients(messageToSend);
     m_dashBoardRefreshTimer.expires_at(m_dashBoardRefreshTimer.expiry() + m_refreshTime);
     m_dashBoardRefreshTimer.async_wait(std::bind(&Server::refreshTopicsDashBoard, this, std::placeholders::_1));
 }

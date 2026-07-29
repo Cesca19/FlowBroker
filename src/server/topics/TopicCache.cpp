@@ -25,7 +25,8 @@ TopicSnapshot TopicCache::getTopicSnapshot(const std::string &topicName) const
     if (it == m_topicStatesCache.end())
         return TopicSnapshot();
     const TopicState &topicState = it->second;
-    return TopicSnapshot { topicState.name(), topicState.lastValue(), topicState.average(), topicState.min(), topicState.max() };
+    return TopicSnapshot { topicState.name(), topicState.lastTimestampNs(), topicState.lastValue(),
+        topicState.average(), topicState.min(), topicState.max() };
 }
 
 std::vector<TopicSnapshot> TopicCache::getAllTopicsSnapshot() const
@@ -36,7 +37,7 @@ std::vector<TopicSnapshot> TopicCache::getAllTopicsSnapshot() const
     if (m_topicStatesCache.empty())
         return topicSnapshots;
     for (const auto &[name, topicState] : m_topicStatesCache)
-        topicSnapshots.push_back({ topicState.name(), topicState.lastValue(),
+        topicSnapshots.push_back({ topicState.name(), topicState.lastTimestampNs(), topicState.lastValue(),
             topicState.average(), topicState.min(), topicState.max() });
     return topicSnapshots;
 }

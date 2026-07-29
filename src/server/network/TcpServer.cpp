@@ -39,6 +39,12 @@ void TcpServer::handleAccept(const std::shared_ptr<TcpConnection> &newConnection
     startAccept();
 }
 
+void TcpServer::sendMessageToAllClients(const std::string &messageToSend) const
+{
+    for (const auto &connection : m_activeConnections)
+        connection->sendMessage(messageToSend);
+}
+
 void TcpServer::addConnection(const std::shared_ptr<TcpConnection> &newConnection)
 {
     m_activeConnections.insert(newConnection);
@@ -61,6 +67,8 @@ void TcpServer::onMessageReceived(const std::shared_ptr<TcpConnection> &connecti
 void TcpServer::onConnectionError(const std::shared_ptr<TcpConnection> &connection,
     const boost::system::error_code &error)
 {
-    if (error)
+    if (error) {
         std::cerr << "TcpServer connection error: " << error.message() << std::endl;
+        removeConnection(connection);
+    }
 }

@@ -5,6 +5,7 @@
 #ifndef FLOWBROKER_TCPCONNECTION_HPP
 #define FLOWBROKER_TCPCONNECTION_HPP
 
+#include <queue>
 #include <memory>
 #include <boost/asio.hpp>
 
@@ -17,11 +18,12 @@ public:
         std::function<void(std::shared_ptr<TcpConnection>)> onDisconnect, std::function<void(std::shared_ptr<TcpConnection>, boost::system::error_code)> onError);
     void sendMessage(const std::string &messageToSend);
 private:
+    void sendNextMessage();
     TcpConnection(boost::asio::io_context &ioContext);
     void handleWrite(const boost::system::error_code &error, size_t bytes_transferred);
     void handleRead(const boost::system::error_code &error, size_t bytes_transferred);
 
-    std::string m_messageToSend;
+    std::queue<std::string> m_messagesToSend;
     std::array<char, 512> m_messageToRead;
     boost::asio::ip::tcp::socket m_socket;
     std::function<void(std::shared_ptr<TcpConnection>)> m_onDisconnect;

@@ -62,3 +62,10 @@ std::string TopicState::name() const
 {
     return m_topicName;
 }
+
+std::uint64_t TopicState::lastTimestampNs() const
+{
+    if (m_recentSamples.empty())
+        return 0;
+    return m_recentSamples.back().timestampNs;
+}
