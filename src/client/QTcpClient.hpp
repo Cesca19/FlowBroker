@@ -10,7 +10,6 @@
 #include <QPushButton>
 #include <QMessageBox>
 #include <QApplication>
-#include <queue>
 
 class QTcpClient  : public QWidget {
     Q_OBJECT
@@ -23,19 +22,20 @@ private:
 signals:
     void quit();
 private slots:
-    void onConnectButtonClicked(bool checked) const;
-    void onConnected();
-    void onDisconnected();
+    void onConnectButtonClicked() const;
+    void onConnected() const;
+    void onDisconnected() const;
     void onMessageReceived();
     void onConnectionError(QAbstractSocket::SocketError socketError);
+    void onSocketStateChanged(QAbstractSocket::SocketState socketState);
 
 private:
     int m_port;
     std::string m_host;
-    bool m_isConnected;
     std::unique_ptr<QPushButton> m_connectBtn;
     std::unique_ptr<QTcpSocket> m_tcpSocket;
     QByteArray m_buffer;
+    QAbstractSocket::SocketState m_socketState;
 };
 
 
