@@ -69,15 +69,31 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)
 # --- Server Executable setup ---
 set(SERVER flow_broker_server)
 add_executable(${SERVER}
-        src/server/main.cpp)
+        src/server/main.cpp
+        src/server/data_sources/SimulatedDataSource.cpp
+        src/server/data_sources/finance/SimulatedFinancialAsset.cpp
+        src/server/data_sources/finance/SimulatedFinanceDataSource.cpp
+        src/server/pipeline/MessageCatalog.cpp
+        src/server/pipeline/MessageProducer.cpp
+        src/server/pipeline/MessageConsumer.cpp
+        src/server/topics/TopicState.cpp
+        src/server/topics/TopicCache.cpp
+        src/server/network/TcpConnection.cpp
+        src/server/network/TcpServer.cpp
+        src/server/network/Server.cpp
+)
 target_compile_features(${SERVER} PRIVATE cxx_std_17)
 target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)
 
 # --- Client Executable setup ---
 set(CLIENT flow_broker_client)
-add_executable(${CLIENT} src/client/main.cpp)
+add_executable(${CLIENT}
+        src/client/main.cpp
+        src/client/QTcpClient.cpp
+        src/client/TopicGraph.cpp
+        )
 target_compile_features(${CLIENT} PRIVATE cxx_std_17)
-target_link_libraries(${CLIENT} PRIVATE Qt6::Widgets)
+target_link_libraries(${CLIENT} PRIVATE Qt6::Widgets PRIVATE Qt6::Network PRIVATE Qt6::Charts)
 
 # --- Install required system libraries for dynamic runtime on Windows ---
 if (MSVC AND RUNTIME_LINK STREQUAL "dynamic")
