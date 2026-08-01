@@ -9,7 +9,11 @@
 #include <QTcpSocket>
 #include <QPushButton>
 #include <QMessageBox>
+#include <QHash>
+#include <QScrollArea>
+#include <QVBoxLayout>
 #include <QApplication>
+#include "TopicGraph.hpp"
 
 class QTcpClient  : public QWidget {
     Q_OBJECT
@@ -26,16 +30,23 @@ private slots:
     void onConnected() const;
     void onDisconnected() const;
     void onMessageReceived();
+    void handleServerMessage(const QString &message);
+    void onNewTopicSnapshotReceived(const QStringList &message);
     void onConnectionError(QAbstractSocket::SocketError socketError);
     void onSocketStateChanged(QAbstractSocket::SocketState socketState);
 
 private:
+    TopicGraph* findOrCreateGraph(const QString& topicName);
+    void clearGraphs();
+
     int m_port;
     std::string m_host;
-    std::unique_ptr<QPushButton> m_connectBtn;
-    std::unique_ptr<QTcpSocket> m_tcpSocket;
+    QPushButton *m_connectBtn;
+    QTcpSocket *m_tcpSocket;
     QByteArray m_buffer;
     QAbstractSocket::SocketState m_socketState;
+    QVBoxLayout* m_graphsLayout{};
+    QHash<QString, TopicGraph*> m_graphsByTopic;
 };
 
 

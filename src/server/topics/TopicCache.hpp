@@ -9,15 +9,7 @@
 #include <vector>
 #include <unordered_map>
 #include "TopicState.hpp"
-
-struct TopicSnapshot {
-    std::string topicName;
-    std::uint64_t timestampNs;
-    double lastValue;
-    double average;
-    double min;
-    double max;
-};
+#include "../../common/TopicSnapshot.hpp"
 
 class TopicCache {
 public:

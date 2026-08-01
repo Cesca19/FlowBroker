@@ -87,11 +87,13 @@ target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)
 
 # --- Client Executable setup ---
 set(CLIENT flow_broker_client)
-add_executable(${CLIENT} src/client/main.cpp
+add_executable(${CLIENT}
+        src/client/main.cpp
         src/client/QTcpClient.cpp
-        src/client/QTcpClient.hpp)
+        src/client/TopicGraph.cpp
+        )
 target_compile_features(${CLIENT} PRIVATE cxx_std_17)
-target_link_libraries(${CLIENT} PRIVATE Qt6::Widgets PRIVATE Qt6::Network)
+target_link_libraries(${CLIENT} PRIVATE Qt6::Widgets PRIVATE Qt6::Network PRIVATE Qt6::Charts)
 
 # --- Install required system libraries for dynamic runtime on Windows ---
 if (MSVC AND RUNTIME_LINK STREQUAL "dynamic")

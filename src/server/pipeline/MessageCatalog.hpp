@@ -9,7 +9,7 @@
 #include <mutex>
 #include <optional>
 #include <condition_variable>
-#include "../common/Message.hpp"
+#include "../../common/Message.hpp"
 
 class MessageCatalog {
 public:

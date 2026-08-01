@@ -6,7 +6,7 @@
 #define FLOWBROKER_IDATASOURCE_HPP
 
 #include <functional>
-#include "../common/Message.hpp"
+#include "../../common/Message.hpp"
 
 // The contract every data source obeys, whether it wraps a GBM simulation or a
 // live WebSocket feed. The server depends only on this interface: it holds a list of IDataSource

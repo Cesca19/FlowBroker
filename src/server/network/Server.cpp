@@ -48,8 +48,9 @@ void Server::refreshTopicsDashBoard(const boost::system::error_code &error)
 
     std::string messageToSend;
     for (const auto&[topicName, timeStampNs, lastValue, average, min, max] : topicSnapshots) {
-        const std::string topicMessage = "At " + std::to_string(timeStampNs) + " ns Topic " + topicName + ": value { " + std::to_string(lastValue) + " } average { " +
-            std::to_string(average) + " } min { " + std::to_string(min) + " } max { " + std::to_string(max) + " }\n";
+        // message arch: TYPE;name;ts;value;average;min;max
+        const std::string topicMessage = "TOPIC:" + topicName + ":" + std::to_string(timeStampNs) + ":" + std::to_string(lastValue) + ":" +
+            std::to_string(average) + ":" + std::to_string(min) + ":" + std::to_string(max) + "\n";
         std::cout << topicMessage;
         messageToSend += topicMessage;
     }
