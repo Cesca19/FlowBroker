@@ -112,7 +112,7 @@ void QTcpClient::onNewTopicSnapshotReceived(const QStringList &message)
     const double max = message[6].toDouble();
 
     const TopicGraph* graph = findOrCreateGraph(topicName);
-    graph->addPoint(tsNs / 1'000'000, value, min, max);
+    graph->addPoint(tsNs / 1'000'000, value);
 }
 
 void QTcpClient::onConnectionError(const QAbstractSocket::SocketError socketError)
