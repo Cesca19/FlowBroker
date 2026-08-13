@@ -57,8 +57,8 @@ jobs:
         with:
           name: ${{ runner.os }}-build
           path: |
-            CppProjectBaseApp-*.zip
-            CppProjectBaseApp-*.tar.gz
+            FlowBroker*.zip
+            FlowBroker*.tar.gz
           if-no-files-found: warn 
 
   release:

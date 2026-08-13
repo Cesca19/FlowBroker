@@ -13,6 +13,13 @@
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
+        },
+        {
+            "name": "compile-commands-vscode",
+            "inherits": "conan-default",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
         }
     ]
 }

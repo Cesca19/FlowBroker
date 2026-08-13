@@ -7,18 +7,37 @@ runs:
       if: runner.os == 'Windows'
       shell: cmd
       run: |
-        if exist .\bin\cpp_project_base.exe (
-          echo Binary found
+        if exist .\bin\flow_broker_server.exe (
+          echo Server binary found
         ) else (
-          echo Binary not found & exit 1
+          echo Server binary not found & exit 1
+        )
+    - name: Run client test on Windows
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        if exist .\bin\flow_broker_client.exe (
+          echo Client binary found
+        ) else (
+          echo Client binary not found & exit 1
         )
     - name: Run test on Linux
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        if [ -x ./bin/cpp_project_base ]; then
-          echo "Binary found"
+        if [ -x ./bin/flow_broker_server ]; then
+          echo "Server binary found"
         else
-          echo "Binary not found" >&2
+          echo "Server binary not found" >&2
+          exit 1
+        fi
+    - name: Run client test on Linux
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        if [ -x ./bin/flow_broker_client ]; then
+          echo "Client binary found"
+        else
+          echo "Client binary not found" >&2
           exit 1
         fi

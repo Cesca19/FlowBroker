@@ -3,12 +3,34 @@ description: Compress the bin folder into versioned archive per OS
 runs:
   using: "composite"
   steps:
-    - name: Compress Windows build
+    - name: Copy and organize artifacts (Windows)
       if: runner.os == 'Windows'
-      run: powershell Compress-Archive -Path bin -DestinationPath "CppProjectBaseApp-${{ github.ref_name }}-Windows.zip"
-      shell: cmd
+      shell: powershell
+      run: |
+        # Create output directory
+        New-Item -ItemType Directory -Path "FlowBroker-${{ github.ref_name }}" -Force | Out-Null
+        
+        # Copy bin contents to root
+        Copy-Item -Path "bin\*" -Destination "FlowBroker-${{ github.ref_name }}" -Recurse -Force
+        
+        # Copy assets folder
+        Copy-Item -Path "assets" -Destination "FlowBroker-${{ github.ref_name }}\assets" -Recurse -Force
+        
+        # Compress the result
+        Compress-Archive -Path "FlowBroker-${{ github.ref_name }}" -DestinationPath "FlowBroker-${{ github.ref_name }}-Windows.zip"
 
-    - name: Compress Linux build
+    - name: Copy and organize artifacts (Linux)
       if: runner.os == 'Linux'
-      run: tar -czf "CppProjectBaseApp-${{ github.ref_name }}-Linux.tar.gz" bin
       shell: bash
+      run: |
+        # Create output directory
+        mkdir -p "FlowBroker-${{ github.ref_name }}"
+        
+        # Copy bin contents to root
+        cp -r bin/* "FlowBroker-${{ github.ref_name }}/"
+        
+        # Copy assets folder
+        cp -r assets "FlowBroker-${{ github.ref_name }}/"
+        
+        # Compress the result
+        tar -czf "FlowBroker-${{ github.ref_name }}-Linux.tar.gz" "FlowBroker-${{ github.ref_name }}"

@@ -30,11 +30,11 @@ runs:
       if: runner.os == 'Linux'
       uses: jwlawson/actions-setup-cmake@v2
       with:
-        cmake-version: '3.28.0'
+        cmake-version: '4.2.x'
 
     # Step 5: Install CMake on Windows
     - name: Install CMake on Windows
       if: runner.os == 'Windows'
       uses: jwlawson/actions-setup-cmake@v2
       with:
-        cmake-version: '3.28.0'
+        cmake-version: '4.2.x'
