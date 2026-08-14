@@ -13,9 +13,6 @@ runs:
         # Copy bin contents to root
         Copy-Item -Path "bin\*" -Destination "FlowBroker-${{ github.ref_name }}" -Recurse -Force
         
-        # Copy assets folder
-        Copy-Item -Path "assets" -Destination "FlowBroker-${{ github.ref_name }}\assets" -Recurse -Force
-        
         # Compress the result
         Compress-Archive -Path "FlowBroker-${{ github.ref_name }}" -DestinationPath "FlowBroker-${{ github.ref_name }}-Windows.zip"
 
@@ -28,9 +25,6 @@ runs:
         
         # Copy bin contents to root
         cp -r bin/* "FlowBroker-${{ github.ref_name }}/"
-        
-        # Copy assets folder
-        cp -r assets "FlowBroker-${{ github.ref_name }}/"
         
         # Compress the result
         tar -czf "FlowBroker-${{ github.ref_name }}-Linux.tar.gz" "FlowBroker-${{ github.ref_name }}"
