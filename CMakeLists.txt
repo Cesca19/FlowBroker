@@ -57,7 +57,7 @@ endif()
 
 #  (via Conan) ---
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/generators")
-find_package(Qt6 REQUIRED COMPONENTS Widgets Network Charts)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network Charts OpenGLWidgets)
 find_package(Boost REQUIRED)
 find_package(Threads REQUIRED)
 
@@ -93,7 +93,7 @@ add_executable(${CLIENT}
         src/client/TopicGraph.cpp
         )
 target_compile_features(${CLIENT} PRIVATE cxx_std_17)
-target_link_libraries(${CLIENT} PRIVATE Qt6::Widgets PRIVATE Qt6::Network PRIVATE Qt6::Charts)
+target_link_libraries(${CLIENT} PRIVATE Qt6::Widgets PRIVATE Qt6::Network PRIVATE Qt6::Charts PRIVATE Qt6::OpenGLWidgets)
 
 # --- Install required system libraries for dynamic runtime on Windows ---
 if (MSVC AND RUNTIME_LINK STREQUAL "dynamic")
