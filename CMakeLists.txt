@@ -87,7 +87,12 @@ target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)
 
 # --- Client Executable setup ---
 set(CLIENT flow_broker_client)
-add_executable(${CLIENT}
+# qt_add_executable (rather than add_executable) is required so that, when Qt
+# itself is built statically (RUNTIME_LINK=static), CMake automatically links
+# the needed platform plugin (e.g. xcb on Linux) into the binary. Without it,
+# a statically-linked Qt app has no platform plugin at all and aborts at
+# startup with "Could not find the Qt platform plugin".
+qt_add_executable(${CLIENT}
         src/client/main.cpp
         src/client/QTcpClient.cpp
         src/client/TopicGraph.cpp
