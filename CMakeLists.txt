@@ -57,7 +57,7 @@ endif()
 
 #  (via Conan) ---
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/generators")
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network Charts)
 find_package(Boost REQUIRED)
 find_package(Threads REQUIRED)
 
