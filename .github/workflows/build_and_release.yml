@@ -31,7 +31,7 @@ jobs:
           # Conan 2.x cache directory (Conan 1.x uses ~/.conan)
           path: ~/.conan2
           # The cache key depends on OS and conanfile.txt hash
-          key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.txt') }}
+          key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.py') }}
           restore-keys: |
             ${{ runner.os }}-conan-
 
