@@ -25,6 +25,17 @@ endif()
 
 # --- Linux static and dynamic linkage settings
 if(UNIX AND NOT APPLE)
+    # Portable RPATH: Qt is always built shared (see conanfile.py) and its
+    # libraries/plugins are bundled next to the executable, regardless of
+    # RUNTIME_LINK, so the binary always needs $ORIGIN to find them.
+    set(CMAKE_SKIP_BUILD_RPATH FALSE)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+
+    # critical: disable RUNPATH
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags")
+
     if(RUNTIME_LINK STREQUAL "static")
         # enable static linking
         message(STATUS "Linux Static linking")
@@ -33,25 +44,8 @@ if(UNIX AND NOT APPLE)
         # Link libgcc and libstdc++ statically; however,  system libraries will remain dynamic
         message(STATUS "Using static linkage for libgcc and libstdc++")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
-
-        # rpath settings to find shared libraries in the executable directory
-        set(CMAKE_SKIP_BUILD_RPATH TRUE)
-        set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-        
     else()
         message(STATUS "Linux dynamic linking")
-        # portable RPATH
-        set(CMAKE_SKIP_BUILD_RPATH FALSE)
-        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-        set(CMAKE_INSTALL_RPATH "$ORIGIN")
-        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
-
-        # critical: disable RUNPATH
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags")
-
-        # set(CMAKE_SKIP_RPATH FALSE)
-        # set(CMAKE_SKIP_INSTALL_RPATH FALSE)
-        # set(CMAKE_INSTALL_REMOVE_ENVIRONMENT_RPATH TRUE)
     endif()
 endif()
 
@@ -87,12 +81,7 @@ target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)
 
 # --- Client Executable setup ---
 set(CLIENT flow_broker_client)
-# qt_add_executable (rather than add_executable) is required so that, when Qt
-# itself is built statically (RUNTIME_LINK=static), CMake automatically links
-# the needed platform plugin (e.g. xcb on Linux) into the binary. Without it,
-# a statically-linked Qt app has no platform plugin at all and aborts at
-# startup with "Could not find the Qt platform plugin".
-qt_add_executable(${CLIENT}
+add_executable(${CLIENT}
         src/client/main.cpp
         src/client/QTcpClient.cpp
         src/client/TopicGraph.cpp

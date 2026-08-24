@@ -49,9 +49,15 @@ class FlowBrokerConanProject(ConanFile):
         """
         Force the shared option only on direct dependencies.
         Transitive dependencies (zlib, freetype, etc.) are left untouched.
+
+        Qt is always kept shared regardless of isShared
         """
         for dep in self.direct_requires:
             pkg_name = dep.split("/")[0].strip()
+            if pkg_name == "qt":
+                self.options["qt"].shared = True
+                self.output.info("Forcing qt:shared=True (static Qt plugin linking is unsupported here)")
+                continue
             try:
                 self.options[pkg_name].shared = self.options.isShared
                 self.output.info(f"Setting {pkg_name}:shared={self.options.isShared}")
