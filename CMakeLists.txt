@@ -12,7 +12,8 @@ if (NOT DEFINED RUNTIME_LINK)
 endif()
 message(STATUS "Runtime link type: ${RUNTIME_LINK}")
 
-# --- Configure MSVC runtime linkage ---
+# --- Configure MSVC runtime linkage (project default, used by targets that
+# don't override it, i.e. the server) ---
 if (MSVC)
     if (RUNTIME_LINK STREQUAL "static")
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -89,8 +90,13 @@ add_executable(${CLIENT}
 target_compile_features(${CLIENT} PRIVATE cxx_std_17)
 target_link_libraries(${CLIENT} PRIVATE Qt6::Widgets PRIVATE Qt6::Network PRIVATE Qt6::Charts PRIVATE Qt6::OpenGLWidgets)
 
-# --- Install required system libraries for dynamic runtime on Windows ---
-if (MSVC AND RUNTIME_LINK STREQUAL "dynamic")
+if (MSVC)
+    set_target_properties(${CLIENT} PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
+
+# --- Install required system libraries on Windows ---
+if (MSVC)
     include(InstallRequiredSystemLibraries)
     install(CODE [[
         include(InstallRequiredSystemLibraries)

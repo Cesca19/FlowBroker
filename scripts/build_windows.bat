@@ -83,7 +83,7 @@ if %RUNTIME_LINK%==static (
 ) else (
     set IS_SHARED=True
 )
-conan install . --settings=build_type=%BUILD_TYPE% -s compiler.cppstd=17 -s compiler.runtime=%RUNTIME_LINK% --build=missing -o "&:isShared=%IS_SHARED%"
+conan install . --settings=build_type=%BUILD_TYPE% -s compiler.cppstd=17 -s compiler.runtime=dynamic --build=missing -o "&:isShared=%IS_SHARED%"
 if %errorlevel% neq 0 (
     echo %red%[ERROR] Conan install failed.%white%
     exit /b 1
@@ -105,17 +105,13 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-:: --- Install C++ runtime DLLs only if dynamic runtime selected ---
-if "%RUNTIME_LINK%" == "dynamic" (
-    echo %blue%[INFO] Installing C++ runtime DLLs%white%
-    cmake --install . --config %BUILD_TYPE% --prefix "%cd%/.."
-    if %errorlevel% neq 0 (
-        echo %red%[ERROR] Failed to copy C++ runtime DLLs.%white%
-        exit /b 1
-    )
-)  else (
-    echo %yellow%[INFO] Static runtime selected - skipping C++ runtime DLLs installation step.%white%
-)  
+:: --- Install C++ runtime DLLs ---
+echo %blue%[INFO] Installing C++ runtime DLLs%white%
+cmake --install . --config %BUILD_TYPE% --prefix "%cd%/.."
+if %errorlevel% neq 0 (
+    echo %red%[ERROR] Failed to copy C++ runtime DLLs.%white%
+    exit /b 1
+)
 
 echo %green%[SUCCESS] Build completed successfully! (%BUILD_TYPE%, %RUNTIME_LINK%)%white%
 goto :eof
