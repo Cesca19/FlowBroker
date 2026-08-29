@@ -26,17 +26,6 @@ endif()
 
 # --- Linux static and dynamic linkage settings
 if(UNIX AND NOT APPLE)
-    # Portable RPATH: Qt is always built shared (see conanfile.py) and its
-    # libraries/plugins are bundled next to the executable, regardless of
-    # RUNTIME_LINK, so the binary always needs $ORIGIN to find them.
-    set(CMAKE_SKIP_BUILD_RPATH FALSE)
-    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-    set(CMAKE_INSTALL_RPATH "$ORIGIN")
-    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
-
-    # critical: disable RUNPATH
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags")
-
     if(RUNTIME_LINK STREQUAL "static")
         # enable static linking
         message(STATUS "Linux Static linking")
@@ -45,8 +34,18 @@ if(UNIX AND NOT APPLE)
         # Link libgcc and libstdc++ statically; however,  system libraries will remain dynamic
         message(STATUS "Using static linkage for libgcc and libstdc++")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+
+        set(CMAKE_SKIP_BUILD_RPATH TRUE)
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
     else()
         message(STATUS "Linux dynamic linking")
+        set(CMAKE_SKIP_BUILD_RPATH FALSE)
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+        set(CMAKE_INSTALL_RPATH "$ORIGIN")
+        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+
+        # disable RUNPATH
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags")
     endif()
 endif()
 
@@ -86,17 +85,24 @@ add_executable(${CLIENT}
         src/client/main.cpp
         src/client/QTcpClient.cpp
         src/client/TopicGraph.cpp
+        src/client/StaticPlugins.cpp
         )
 target_compile_features(${CLIENT} PRIVATE cxx_std_17)
-target_link_libraries(${CLIENT} PRIVATE Qt6::Widgets PRIVATE Qt6::Network PRIVATE Qt6::Charts PRIVATE Qt6::OpenGLWidgets)
 
-if (MSVC)
-    set_target_properties(${CLIENT} PROPERTIES
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+set(CLIENT_QT_LIBS "")
+if(RUNTIME_LINK STREQUAL "static")
+    target_compile_definitions(${CLIENT} PRIVATE QT_STATIC_PLATFORM_PLUGIN)
+    if(UNIX AND NOT APPLE)
+        list(APPEND CLIENT_QT_LIBS Qt6::QXcbIntegrationPlugin)
+    elseif(WIN32)
+        list(APPEND CLIENT_QT_LIBS Qt6::QWindowsIntegrationPlugin)
+    endif()
 endif()
+list(APPEND CLIENT_QT_LIBS Qt6::Widgets Qt6::Network Qt6::Charts Qt6::OpenGLWidgets)
+target_link_libraries(${CLIENT} PRIVATE ${CLIENT_QT_LIBS})
 
-# --- Install required system libraries on Windows ---
-if (MSVC)
+# --- Install required system libraries for dynamic runtime on Windows ---
+if (MSVC AND RUNTIME_LINK STREQUAL "dynamic")
     include(InstallRequiredSystemLibraries)
     install(CODE [[
         include(InstallRequiredSystemLibraries)
