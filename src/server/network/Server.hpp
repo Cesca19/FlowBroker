@@ -6,7 +6,7 @@
 #define FLOWBROKER_SERVER_HPP
 
 #include "TcpServer.hpp"
-#include "UdpServer.hpp"
+#include "UdpSender.hpp"
 #include "../topics/TopicCache.hpp"
 #include "../pipeline/MessageProducer.hpp"
 

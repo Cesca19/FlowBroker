@@ -6,22 +6,7 @@
 #include "pipeline/MessageConsumer.hpp"
 #include "network/Server.hpp"
 
-
-
-int main(int ac, char **av) {
-    try {
-        boost::asio::io_context io_context;
-        UdpServer updServer(io_context, std::stoi(av[1]));
-        io_context.run();
-    }
-    catch (std::exception& e)
-    {
-        std::cerr << e.what() << std::endl;
-    }
-    return 0;
-}
-
-/*int main(int ac, char **av)
+int main(int ac, char **av)
 {
     if(ac != 2) {
         std::cerr << "Usage: " << av[0] << " <port>" << std::endl;
@@ -49,4 +34,4 @@ int main(int ac, char **av) {
         std::cerr << e.what() << std::endl;
     }
     return 0;
-}*/
+}
