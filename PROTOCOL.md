@@ -66,10 +66,11 @@ Literally it means that a `value` is an optional minus sign, then one or more di
 optionally a dot followed by one or more digits. So `42`, `-7`, `500.00` and
 `-3.14` are all valid values, while `1.2.3` or an empty string are not.
 
-
 <br>
 
-## 3. Message framing in the control channel
+##  3. Control channel (TCP)
+
+### 3.1 Message framing in the control channel
 
 TCP delivers a continuous stream of bytes, not messages. It never tells the
 server "this group of bytes is one complete command". The server therefore reads
@@ -89,7 +90,7 @@ terminator, but a compliant client MUST send `CRLF`.
 
 <br>
 
-## 4. Session lifecycle
+### 3.2 Session lifecycle
 A session is the lifetime of one TCP connection. It moves through a small number
 of states.
 
@@ -131,7 +132,7 @@ of states.
 
 <br>
 
-## 5. Client commands
+### 3.3 Client commands
 ```abnf
 ; FlowBroker control protocol, client commands
  
@@ -167,7 +168,7 @@ port     = 1*5DIGIT
 
 <br>
 
-## 6. Server responses
+### 3.4 Server responses
 Every reply is a single line: a three-digit code, a space, then text.
 
 ```abnf
@@ -219,7 +220,7 @@ Reply formats that carry extra data:
 
 <br>
 
-## 7. Protocol rules
+### 3.5 Protocol rules
 
 1. **HELLO is mandatory and must come first.** The server cannot push UDP data to
    a client whose endpoint it does not know, so a subscription before `HELLO`
@@ -244,7 +245,7 @@ Reply formats that carry extra data:
 
 <br>
 
-## 8. Example session
+### 3.6 Example session
 
 Lines starting with `C:` are sent by the client, lines starting with `S:` by the
 server. The trailing `CRLF` on each line is not shown.
@@ -274,5 +275,5 @@ which reference topics by their `topic_id` rather than by name.
 
 <br>
 
-## 9. Data channel (UDP binary format)
+## 4. Data channel (UDP)
 
