@@ -3,7 +3,6 @@
 //
 
 #include "Server.hpp"
-#include <iostream>
 
 Server::Server(boost::asio::io_context &ioContext, MessageCatalog &catalog, TopicCache &topicCache, const int tcpPort)
     : m_ioContext(ioContext)
@@ -27,6 +26,7 @@ void Server::run()
     m_dashBoardRefreshTimer.async_wait(std::bind(&Server::refreshTopicsDashBoard, this, std::placeholders::_1));
     m_tcpServer.run();
     m_ioContext.run();
+
 }
 
 void Server::stop()

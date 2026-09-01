@@ -5,6 +5,7 @@
 #ifndef FLOWBROKER_MESSAGEPRODUCER_HPP
 #define FLOWBROKER_MESSAGEPRODUCER_HPP
 
+#include <iostream>
 #include <boost/asio.hpp>
 #include "MessageCatalog.hpp"
 #include "../data_sources/IDataSource.hpp"

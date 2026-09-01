@@ -15,6 +15,7 @@ void MessageProducer::start()
 {
     initDataSources();
     startDataSources();
+    std::cout << "Message producer launched" << std::endl;
 }
 
 void MessageProducer::stop() const

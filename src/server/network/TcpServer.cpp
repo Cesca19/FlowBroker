@@ -14,6 +14,7 @@ TcpServer::TcpServer(boost::asio::io_context &ioContext, const int port)
 
 void TcpServer::run()
 {
+    std::cout << "Tcp server running on port " << m_port << std::endl;
     startAccept();
 }
 
