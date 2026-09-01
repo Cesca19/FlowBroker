@@ -2,8 +2,8 @@
 // Created by fran on 29/07/2026.
 //
 
-#ifndef FLOWBROKER_QTCPCLIENT_HPP
-#define FLOWBROKER_QTCPCLIENT_HPP
+#ifndef FLOWBROKER_TCPCLIENT_HPP
+#define FLOWBROKER_TCPCLIENT_HPP
 
 #include <string>
 #include <QTcpSocket>
@@ -15,10 +15,10 @@
 #include <QApplication>
 #include "TopicGraph.hpp"
 
-class QTcpClient  : public QWidget {
+class TcpClient  : public QWidget {
     Q_OBJECT
 public:
-    explicit QTcpClient(const std::string &host, int port, QWidget *parent = nullptr);
+    explicit TcpClient(const std::string &host, int port, QWidget *parent = nullptr);
 private:
     void initConnection();
     void connectToServer() const;
@@ -50,4 +50,4 @@ private:
 };
 
 
-#endif //FLOWBROKER_QTCPCLIENT_HPP
+#endif //FLOWBROKER_TCPCLIENT_HPP

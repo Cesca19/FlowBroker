@@ -2,12 +2,12 @@
 // Created by fran on 29/07/2026.
 //
 
-#include "QTcpClient.hpp"
+#include "TcpClient.hpp"
 
 #include <iostream>
 #include <ostream>
 
-QTcpClient::QTcpClient(const std::string &host, const int port, QWidget *parent)
+TcpClient::TcpClient(const std::string &host, const int port, QWidget *parent)
     : QWidget(parent)
     , m_port(port)
     , m_host(host)
@@ -32,7 +32,7 @@ QTcpClient::QTcpClient(const std::string &host, const int port, QWidget *parent)
     initConnection();
 }
 
-void QTcpClient::initConnection()
+void TcpClient::initConnection()
 {
     m_tcpSocket = new QTcpSocket(this);
     m_socketState = m_tcpSocket->state();
@@ -44,18 +44,18 @@ void QTcpClient::initConnection()
     connect(m_tcpSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(onSocketStateChanged(QAbstractSocket::SocketState)));
 }
 
-void QTcpClient::connectToServer() const
+void TcpClient::connectToServer() const
 {
     m_tcpSocket->abort();
     m_tcpSocket->connectToHost(m_host.c_str(), m_port);
 }
 
-void QTcpClient::disconnectFromServer() const
+void TcpClient::disconnectFromServer() const
 {
     m_tcpSocket->disconnectFromHost();
 }
 
-void QTcpClient::onConnectButtonClicked() const
+void TcpClient::onConnectButtonClicked() const
 {
     if (m_socketState == QAbstractSocket::UnconnectedState)
         connectToServer();
@@ -63,17 +63,17 @@ void QTcpClient::onConnectButtonClicked() const
         disconnectFromServer();
 }
 
-void QTcpClient::onConnected() const
+void TcpClient::onConnected() const
 {
     std::cout << "Connected successfully" << std::endl;
 }
 
-void QTcpClient::onDisconnected() const
+void TcpClient::onDisconnected() const
 {
     std::cout << "Disconnected successfully" << std::endl;
 }
 
-void QTcpClient::onMessageReceived()
+void TcpClient::onMessageReceived()
 {
     m_buffer.append(m_tcpSocket->readAll());
 
@@ -87,7 +87,7 @@ void QTcpClient::onMessageReceived()
     }
 }
 
-void QTcpClient::handleServerMessage(const QString &message)
+void TcpClient::handleServerMessage(const QString &message)
 {
     const QStringList parts = message.split(':');
 
@@ -99,7 +99,7 @@ void QTcpClient::handleServerMessage(const QString &message)
     // std::cout << "-" << message.toStdString() << "-" << std::endl;
 }
 
-void QTcpClient::onNewTopicSnapshotReceived(const QStringList &message)
+void TcpClient::onNewTopicSnapshotReceived(const QStringList &message)
 {
     // Expect: TOPIC:name:ts:value:average:min:max  -> 7 fields
     if (message.size() != 7)
@@ -115,7 +115,7 @@ void QTcpClient::onNewTopicSnapshotReceived(const QStringList &message)
     graph->addPoint(tsNs / 1'000'000, value);
 }
 
-void QTcpClient::onConnectionError(const QAbstractSocket::SocketError socketError)
+void TcpClient::onConnectionError(const QAbstractSocket::SocketError socketError)
 {
     switch (socketError) {
         case QAbstractSocket::RemoteHostClosedError:
@@ -141,7 +141,7 @@ void QTcpClient::onConnectionError(const QAbstractSocket::SocketError socketErro
     }
 }
 
-void QTcpClient::onSocketStateChanged(const QAbstractSocket::SocketState socketState)
+void TcpClient::onSocketStateChanged(const QAbstractSocket::SocketState socketState)
 {
     switch (socketState) {
         case QAbstractSocket::UnconnectedState:
@@ -178,7 +178,7 @@ void QTcpClient::onSocketStateChanged(const QAbstractSocket::SocketState socketS
     m_socketState = socketState;
 }
 
-TopicGraph * QTcpClient::findOrCreateGraph(const QString &topicName)
+TopicGraph * TcpClient::findOrCreateGraph(const QString &topicName)
 {
     auto it = m_graphsByTopic.find(topicName);
     if (it != m_graphsByTopic.end())
@@ -190,7 +190,7 @@ TopicGraph * QTcpClient::findOrCreateGraph(const QString &topicName)
     return graph;
 }
 
-void QTcpClient::clearGraphs()
+void TcpClient::clearGraphs()
 {
     for (TopicGraph* graph : m_graphsByTopic)
         graph->deleteLater();

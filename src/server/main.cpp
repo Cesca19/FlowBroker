@@ -6,21 +6,16 @@
 #include <iostream>
 #include "pipeline/MessageConsumer.hpp"
 #include "network/Server.hpp"
-
-
-constexpr int s_defaultTcpPort = 6666;
-constexpr int s_minPort = 1024;
-constexpr int s_maxPort = 65535;
-
+#include "../common/NetworkDefaults.hpp"
 
 static void printUsage(std::ostream &out, const std::string &programName)
 {
     out << "Usage: " << programName << " [tcp_port]" << std::endl
         << std::endl
         << "  tcp_port    TCP control port to listen on (default "
-        << s_defaultTcpPort << ")." << std::endl
-        << "              Must be in the range " << s_minPort << ".."
-        << s_maxPort << "." << std::endl
+        << network::defaultTcpPort << ")." << std::endl
+        << "              Must be in the range " << network::minPort << ".."
+        << network::maxPort << "." << std::endl
         << "  -h, --help  Show this message and exit." << std::endl
         << "\n"
         << "The UDP data socket is send-only and uses an ephemeral port chosen" << std::endl
@@ -37,7 +32,7 @@ static std::optional<std::uint16_t> parsePort(const std::string_view text)
     // Reject if parsing failed, or if characters remain after the number.
     if (ec != std::errc() || ptr != end)
         return std::nullopt;
-    if (value < s_minPort || value > s_maxPort)
+    if (value < network::minPort || value > network::maxPort)
         return std::nullopt;
     return static_cast<std::uint16_t>(value);
 }
@@ -70,7 +65,7 @@ static int launchServer(int tcpPort)
 int main(int ac, char **av)
 {
     if (ac == 1)
-        return launchServer(s_defaultTcpPort);
+        return launchServer(network::defaultTcpPort);
 
     if (ac > 2) {
         std::cerr << "Error: too many arguments.\n\n";
@@ -85,7 +80,7 @@ int main(int ac, char **av)
     }
     const std::optional<std::uint16_t> tcpPort = parsePort(arg1);
     if (!tcpPort) {
-        std::cerr << "Error: invalid port \"" << arg1 << "\" (expected an integer in " << s_minPort << ".." << s_maxPort << " range)." << std::endl << std::endl;
+        std::cerr << "Error: invalid port \"" << arg1 << "\" (expected an integer in " << network::minPort << ".." << network::maxPort << " range)." << std::endl << std::endl;
         printUsage(std::cerr, av[0]);
         return 84;
     }

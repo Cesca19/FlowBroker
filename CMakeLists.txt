@@ -84,7 +84,7 @@ target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)
 set(CLIENT flow_broker_client)
 add_executable(${CLIENT}
         src/client/main.cpp
-        src/client/QTcpClient.cpp
+        src/client/TcpClient.cpp
         src/client/TopicGraph.cpp
         src/client/StaticPlugins.cpp
         )
