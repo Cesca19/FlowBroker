@@ -2,33 +2,8 @@
 // Created by fran on 06/07/2026.
 //
 
-#include <charconv>
 #include <iostream>
-#include "TcpClient.hpp"
-#include "../common/NetworkDefaults.hpp"
-
-static std::optional<std::uint16_t> parsePort(const std::string_view text)
-{
-    int value = 0;
-    const char *begin = text.data();
-    const char *end = text.data() + text.size();
-
-    auto [ptr, ec] = std::from_chars(begin, end, value);
-    // Reject if parsing failed, or if characters remain after the number.
-    if (ec != std::errc() || ptr != end)
-        return std::nullopt;
-    if (value < network::minPort || value > network::maxPort)
-        return std::nullopt;
-    return static_cast<std::uint16_t>(value);
-}
-
-static std::optional<std::string> parseHost(const std::string &text)
-{
-    QHostAddress address;
-    if (!address.setAddress(QString::fromStdString(text)))
-        return std::nullopt;
-    return text;
-}
+#include "ClientWindow.hpp"
 
 static void printUsage(std::ostream &out, const std::string &programName)
 {
@@ -70,7 +45,7 @@ int main(int ac, char **av)
             udpPort = *port;
 
     QApplication app(ac, av);
-    TcpClient client(host, tcpPort);
-    client.show();
+    ClientWindow clientWindow(host, tcpPort, udpPort);
+    clientWindow.show();
     return app.exec();
 }

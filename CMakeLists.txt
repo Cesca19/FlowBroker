@@ -87,7 +87,10 @@ add_executable(${CLIENT}
         src/client/TcpClient.cpp
         src/client/TopicGraph.cpp
         src/client/StaticPlugins.cpp
-        )
+        src/client/ClientWindow.cpp
+        src/client/NetworkUtils.cpp
+        src/client/UIUtils.hpp
+)
 target_compile_features(${CLIENT} PRIVATE cxx_std_17)
 
 set(CLIENT_QT_LIBS "")

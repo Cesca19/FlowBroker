@@ -3,32 +3,13 @@
 //
 
 #include "TcpClient.hpp"
-
 #include <iostream>
-#include <ostream>
 
-TcpClient::TcpClient(const std::string &host, const int port, QWidget *parent)
-    : QWidget(parent)
-    , m_port(port)
-    , m_host(host)
-    , m_connectBtn(nullptr)
+TcpClient::TcpClient(QObject *parent)
+    : QObject(parent)
     , m_tcpSocket(nullptr)
     , m_socketState(QAbstractSocket::UnconnectedState)
-    , m_graphsLayout(nullptr)
 {
-    auto* rootLayout = new QVBoxLayout(this);
-    auto* graphsContainer = new QWidget();
-    m_graphsLayout = new QVBoxLayout(graphsContainer);
-    m_connectBtn = new QPushButton("Connect");
-    auto* scrollArea = new QScrollArea();
-    scrollArea->setWidget(graphsContainer);
-    scrollArea->setWidgetResizable(true);   // container follows the scroll area width
-
-    rootLayout->addWidget(m_connectBtn);
-    rootLayout->addWidget(scrollArea);
-    resize(800, 800);
-    connect(m_connectBtn, SIGNAL(clicked()), this, SLOT(onConnectButtonClicked()));
-    connect(this, SIGNAL(quit()), QApplication::instance(), SLOT(quit()));
     initConnection();
 }
 
@@ -44,23 +25,19 @@ void TcpClient::initConnection()
     connect(m_tcpSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(onSocketStateChanged(QAbstractSocket::SocketState)));
 }
 
-void TcpClient::connectToServer() const
+void TcpClient::connectToServer(const std::string &host, const std::uint16_t port) const
 {
+    if (m_socketState != QAbstractSocket::UnconnectedState)
+        return;
+    std::cout << "Connecting to: " << host << ":" << port << std::endl;
     m_tcpSocket->abort();
-    m_tcpSocket->connectToHost(m_host.c_str(), m_port);
+    m_tcpSocket->connectToHost(host.c_str(), port);
 }
 
 void TcpClient::disconnectFromServer() const
 {
-    m_tcpSocket->disconnectFromHost();
-}
-
-void TcpClient::onConnectButtonClicked() const
-{
-    if (m_socketState == QAbstractSocket::UnconnectedState)
-        connectToServer();
-    else if (m_socketState == QAbstractSocket::ConnectedState)
-        disconnectFromServer();
+    if (m_socketState == QAbstractSocket::ConnectedState)
+        m_tcpSocket->disconnectFromHost();
 }
 
 void TcpClient::onConnected() const
@@ -105,39 +82,38 @@ void TcpClient::onNewTopicSnapshotReceived(const QStringList &message)
     if (message.size() != 7)
         return;   // skip
 
-    const QString topicName = message[1];
+    const QString& topicName = message[1];
     const qint64 tsNs = message[2].toLongLong();
     const double value = message[3].toDouble();
     const double min = message[5].toDouble();
     const double max = message[6].toDouble();
 
-    const TopicGraph* graph = findOrCreateGraph(topicName);
-    graph->addPoint(tsNs / 1'000'000, value);
+    emit newTopicReceived(topicName, tsNs / 1'000'000, value);
 }
 
 void TcpClient::onConnectionError(const QAbstractSocket::SocketError socketError)
 {
     switch (socketError) {
         case QAbstractSocket::RemoteHostClosedError:
-            QMessageBox::information(this, tr("FlowBroker Client"),
-                                     tr("The remote host closed the connection. "));
+            emit addMessage(tr("FlowBroker Client"),
+                tr("The remote host closed the connection. "));
             break;
         case QAbstractSocket::HostNotFoundError:
-            QMessageBox::information(this, tr("FlowBroker Client"),
-                                     tr("The host was not found. Please check the "
-                                        "host name and port settings."));
+            emit addMessage(tr("FlowBroker Client"),
+                tr("The host was not found. Please check the "
+                                    "host name and port settings."), MessageType::Error);
             break;
         case QAbstractSocket::ConnectionRefusedError:
-            QMessageBox::information(this, tr("FlowBroker Client"),
-                                     tr("The connection was refused by the peer. "
-                                        "Make sure the Flowbroker server is running, "
-                                        "and check that the host name and port "
-                                        "settings are correct."));
+            emit addMessage(tr("FlowBroker Client"),
+                tr("The connection was refused by the peer. "
+                                "Make sure the Flowbroker server is running, "
+                                "and check that the host name and port "
+                                "settings are correct."), MessageType::Warning);
             break;
         default:
-            QMessageBox::information(this, tr("FlowBroker Client"),
-                                     tr("The following error occurred: %1.")
-                                     .arg(m_tcpSocket->errorString()));
+            emit addMessage(tr("FlowBroker Client"),
+                tr("The following error occurred: %1.").arg(m_tcpSocket->errorString()),
+                MessageType::Error);
     }
 }
 
@@ -146,53 +122,32 @@ void TcpClient::onSocketStateChanged(const QAbstractSocket::SocketState socketSt
     switch (socketState) {
         case QAbstractSocket::UnconnectedState:
             std::cout << "Entering unconnected state" << std::endl;
-            m_connectBtn->setEnabled(true);
-            m_connectBtn->setText("Connect");
-            clearGraphs();
+            emit connectionStateChanged(ConnectionState::Disconnected);
             break;
-        case QAbstractSocket::HostLookupState: //	The socket is performing a host name lookup.
+        case QAbstractSocket::HostLookupState:
+            //	The socket is performing a host name lookup.
             std::cout << "Trying to lookup host" << std::endl;
-            m_connectBtn->setEnabled(false);
-            m_connectBtn->setText("Trying to connect...");
+            emit connectionStateChanged(ConnectionState::Connecting);
             break;
-        case QAbstractSocket::ConnectingState: //	The socket has started establishing a connection.
+        case QAbstractSocket::ConnectingState:
+            //	The socket has started establishing a connection.
             std::cout << "Trying to connect..." << std::endl;
-            m_connectBtn->setEnabled(false);
-            m_connectBtn->setText("Trying to connect...");
+            emit connectionStateChanged(ConnectionState::Connecting);
             break;
         case QAbstractSocket::ConnectedState:
-            m_connectBtn->setEnabled(true);
-            m_connectBtn->setText("Disconnect");
+            emit connectionStateChanged(ConnectionState::Connected);
             break;
-        case QAbstractSocket::BoundState: //	The socket is bound to an address and port.
+        case QAbstractSocket::BoundState:
+            //	The socket is bound to an address and port.
             std::cout << "BoundState" << std::endl;
             break;
-        case QAbstractSocket::ClosingState: //	The socket is about to close (data may still be waiting to be written).
+        case QAbstractSocket::ClosingState:
+            //	The socket is about to close (data may still be waiting to be written).
             std::cout << "Trying to close connection" << std::endl;
-            m_connectBtn->setEnabled(false);
-            m_connectBtn->setText("Trying to disconnect...");
+            emit connectionStateChanged(ConnectionState::Closing);
             break;
         default:
             break;
     }
     m_socketState = socketState;
-}
-
-TopicGraph * TcpClient::findOrCreateGraph(const QString &topicName)
-{
-    auto it = m_graphsByTopic.find(topicName);
-    if (it != m_graphsByTopic.end())
-        return it.value();
-
-    auto* graph = new TopicGraph(topicName);
-    m_graphsLayout->addWidget(graph);
-    m_graphsByTopic.insert(topicName, graph);
-    return graph;
-}
-
-void TcpClient::clearGraphs()
-{
-    for (TopicGraph* graph : m_graphsByTopic)
-        graph->deleteLater();
-    m_graphsByTopic.clear();
 }

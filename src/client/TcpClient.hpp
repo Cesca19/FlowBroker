@@ -7,26 +7,22 @@
 
 #include <string>
 #include <QTcpSocket>
-#include <QPushButton>
-#include <QMessageBox>
-#include <QHash>
-#include <QScrollArea>
-#include <QVBoxLayout>
 #include <QApplication>
-#include "TopicGraph.hpp"
+#include "UIUtils.hpp"
 
-class TcpClient  : public QWidget {
+class TcpClient  : public QObject {
     Q_OBJECT
 public:
-    explicit TcpClient(const std::string &host, int port, QWidget *parent = nullptr);
+    explicit TcpClient(QObject *parent = nullptr);
+    void connectToServer(const std::string &host, std::uint16_t port) const;
+    void disconnectFromServer() const;
 private:
     void initConnection();
-    void connectToServer() const;
-    void disconnectFromServer() const;
 signals:
-    void quit();
+    void connectionStateChanged(ConnectionState connectionState);
+    void newTopicReceived(const QString &topicName, qint64 tsMs, double value);
+    void addMessage(const QString &messageTitle, const QString &messageContent, MessageType messageType = MessageType::Info);
 private slots:
-    void onConnectButtonClicked() const;
     void onConnected() const;
     void onDisconnected() const;
     void onMessageReceived();
@@ -36,17 +32,9 @@ private slots:
     void onSocketStateChanged(QAbstractSocket::SocketState socketState);
 
 private:
-    TopicGraph* findOrCreateGraph(const QString& topicName);
-    void clearGraphs();
-
-    int m_port;
-    std::string m_host;
-    QPushButton *m_connectBtn;
     QTcpSocket *m_tcpSocket;
     QByteArray m_buffer;
     QAbstractSocket::SocketState m_socketState;
-    QVBoxLayout* m_graphsLayout{};
-    QHash<QString, TopicGraph*> m_graphsByTopic;
 };
 
 
