@@ -16,9 +16,8 @@ boost::asio::ip::tcp::socket & TcpConnection::getSocket()
 
 void TcpConnection::start()
 {
-    sendMessage("New client accepted by the server\n");
-    m_socket.async_read_some(boost::asio::buffer(m_messageToRead),
-        std::bind(&TcpConnection::handleRead, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+    // sendMessage("New client accepted by the server");
+    readMessage();
 }
 
 void TcpConnection::initCallbacks(std::function<void(std::shared_ptr<TcpConnection>, std::string)> onMessageReceived,
@@ -32,12 +31,20 @@ void TcpConnection::initCallbacks(std::function<void(std::shared_ptr<TcpConnecti
 
 void TcpConnection::sendMessage(const std::string &messageToSend)
 {
+    const std::string message = messageToSend + "\r\n";
     if (m_messagesToSend.empty()) {
-        m_messagesToSend.push(messageToSend);
+        m_messagesToSend.push(message);
         sendNextMessage();
     }
     else
-        m_messagesToSend.push(messageToSend);
+        m_messagesToSend.push(message);
+}
+
+void TcpConnection::readMessage()
+{
+    m_socket.async_read_some(boost::asio::buffer(m_messageToRead),
+        std::bind(&TcpConnection::handleRead, shared_from_this(),
+            boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 void TcpConnection::sendNextMessage()
@@ -71,8 +78,23 @@ void TcpConnection::handleWrite(const boost::system::error_code &error, size_t b
 
 void TcpConnection::handleRead(const boost::system::error_code &error, size_t bytes_transferred)
 {
-    if (error == boost::asio::error::eof && m_onDisconnect)
+    if (error == boost::asio::error::eof && m_onDisconnect) {
         m_onDisconnect(shared_from_this());
-    else if (error && m_onError)
+        return;
+    }
+    if (error && m_onError) {
         m_onError(shared_from_this(), error);
+        return;
+    }
+    m_pendingMessage += std::string(m_messageToRead.data(), bytes_transferred);
+
+    while (m_pendingMessage.find('\n') != std::string::npos) {
+        std::string line = m_pendingMessage.substr(0, m_pendingMessage.find('\n'));
+        m_pendingMessage.erase(0, m_pendingMessage.find('\n') + 1);
+        if (!line.empty() && line.back() == '\r')
+            line.pop_back();
+        if (!line.empty() && m_onMessageReceived)
+            m_onMessageReceived(shared_from_this(), line);
+    }
+    readMessage();
 }

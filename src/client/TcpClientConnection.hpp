@@ -2,40 +2,40 @@
 // Created by fran on 29/07/2026.
 //
 
-#ifndef FLOWBROKER_TCPCLIENT_HPP
-#define FLOWBROKER_TCPCLIENT_HPP
+#ifndef FLOWBROKER_TCPCLIENTCONNECTION_HPP
+#define FLOWBROKER_TCPCLIENTCONNECTION_HPP
 
 #include <string>
 #include <QTcpSocket>
 #include <QApplication>
 #include "UIUtils.hpp"
 
-class TcpClient  : public QObject {
+class TcpClientConnection  : public QObject {
     Q_OBJECT
 public:
-    explicit TcpClient(QObject *parent = nullptr);
+    explicit TcpClientConnection(QObject *parent = nullptr);
     void connectToServer(const std::string &host, std::uint16_t port) const;
     void disconnectFromServer() const;
 private:
     void initConnection();
 signals:
     void connectionStateChanged(ConnectionState connectionState);
-    void newTopicReceived(const QString &topicName, qint64 tsMs, double value);
     void addMessage(const QString &messageTitle, const QString &messageContent, MessageType messageType = MessageType::Info);
+    void messageReceived(const QString &messageContent);
 private slots:
-    void onConnected() const;
+    void onConnected();
     void onDisconnected() const;
     void onMessageReceived();
-    void handleServerMessage(const QString &message);
-    void onNewTopicSnapshotReceived(const QStringList &message);
     void onConnectionError(QAbstractSocket::SocketError socketError);
     void onSocketStateChanged(QAbstractSocket::SocketState socketState);
 
 private:
+    void sendMessage(const std::string &message);
+
     QTcpSocket *m_tcpSocket;
     QByteArray m_buffer;
     QAbstractSocket::SocketState m_socketState;
 };
 
 
-#endif //FLOWBROKER_TCPCLIENT_HPP
+#endif //FLOWBROKER_TCPCLIENTCONNECTION_HPP

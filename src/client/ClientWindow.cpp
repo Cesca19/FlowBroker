@@ -9,10 +9,9 @@ ClientWindow::ClientWindow(const std::string &host, const int tcpPort, const int
     , m_tcpPort(tcpPort)
     , m_udpPort(udpPort)
     , m_host(host)
-    , m_tcpClient(nullptr)
+    , m_tcpConnectionState(ConnectionState::Disconnected)
     , m_connectBtn(nullptr)
     , m_graphsLayout(nullptr)
-    , m_tcpConnectionState(ConnectionState::Disconnected)
 {
     auto* rootLayout = new QVBoxLayout(this);
     auto* graphsContainer = new QWidget();
@@ -35,10 +34,10 @@ ClientWindow::ClientWindow(const std::string &host, const int tcpPort, const int
     rootLayout->addWidget(scrollArea);
     resize(800, 800);
 
-    m_tcpClient = new TcpClient(this);
-    connect(m_tcpClient, &TcpClient::addMessage, this, &ClientWindow::onAddMessageRequested);
-    connect(m_tcpClient, &TcpClient::newTopicReceived, this, &ClientWindow::onNewTopicReceived);
-    connect(m_tcpClient, &TcpClient::connectionStateChanged, this, &ClientWindow::onTcpConnectionStateChanged);
+    m_clientSession = new ClientSession(this);
+    connect(m_clientSession, &ClientSession::addMessage, this, &ClientWindow::onAddMessageRequested);
+    connect(m_clientSession, &ClientSession::newTopicReceived, this, &ClientWindow::onNewTopicReceived);
+    connect(m_clientSession, &ClientSession::tcpConnectionStateChanged, this, &ClientWindow::onTcpConnectionStateChanged);
     connect(m_connectBtn, &QPushButton::clicked, this, &ClientWindow::onConnectButtonClicked);
 }
 
@@ -60,7 +59,7 @@ void ClientWindow::onAddMessageRequested(const QString &messageTitle, const QStr
 void ClientWindow::onConnectButtonClicked()
 {
     if (m_tcpConnectionState == ConnectionState::Connected) {
-        m_tcpClient->disconnectFromServer();
+        m_clientSession->disconnectTcpClient();
         return;
     }
 
@@ -83,7 +82,7 @@ void ClientWindow::onConnectButtonClicked()
     m_host = *host;
     m_tcpPort = *tcpPort;
     m_udpPort = *udpPort;
-    m_tcpClient->connectToServer(m_host, m_tcpPort);
+    m_clientSession->connectTcpClient(m_host, m_tcpPort);
 }
 
 void ClientWindow::onNewTopicReceived(const QString &topicName, const qint64 tsMs, const double value)
@@ -99,6 +98,7 @@ void ClientWindow::onTcpConnectionStateChanged(const ConnectionState connectionS
     m_tcpPortEdit->setEnabled(isEditable);
     m_udpPortEdit->setEnabled(isEditable);
 
+    m_tcpConnectionState = connectionState;
     switch (connectionState) {
         case ConnectionState::Connecting:
             m_connectBtn->setEnabled(false);
@@ -120,7 +120,6 @@ void ClientWindow::onTcpConnectionStateChanged(const ConnectionState connectionS
         default:
             break;
     }
-    m_tcpConnectionState = connectionState;
 }
 
 TopicGraph * ClientWindow::findOrCreateGraph(const QString &topicName)

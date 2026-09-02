@@ -13,9 +13,9 @@
 #include <QScrollArea>
 #include <QVBoxLayout>
 #include <QMessageBox>
-#include "TcpClient.hpp"
 #include "TopicGraph.hpp"
 #include "NetworkUtils.hpp"
+#include "ClientSession.hpp"
 
 
 class ClientWindow : public QWidget {
@@ -38,7 +38,7 @@ private:
     int m_udpPort;
     std::string m_host;
     ConnectionState m_tcpConnectionState;
-    TcpClient *m_tcpClient;
+    ClientSession *m_clientSession;
     QLineEdit *m_hostEdit;
     QLineEdit *m_tcpPortEdit;
     QLineEdit *m_udpPortEdit;

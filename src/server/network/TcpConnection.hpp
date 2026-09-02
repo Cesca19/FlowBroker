@@ -18,11 +18,13 @@ public:
         std::function<void(std::shared_ptr<TcpConnection>)> onDisconnect, std::function<void(std::shared_ptr<TcpConnection>, boost::system::error_code)> onError);
     void sendMessage(const std::string &messageToSend);
 private:
+    void readMessage();
     void sendNextMessage();
     TcpConnection(boost::asio::io_context &ioContext);
     void handleWrite(const boost::system::error_code &error, size_t bytes_transferred);
     void handleRead(const boost::system::error_code &error, size_t bytes_transferred);
 
+    std::string m_pendingMessage;
     std::queue<std::string> m_messagesToSend;
     std::array<char, 512> m_messageToRead;
     boost::asio::ip::tcp::socket m_socket;

@@ -84,12 +84,12 @@ target_link_libraries(${SERVER} PRIVATE Boost::boost Threads::Threads)
 set(CLIENT flow_broker_client)
 add_executable(${CLIENT}
         src/client/main.cpp
-        src/client/TcpClient.cpp
+        src/client/TcpClientConnection.cpp
         src/client/TopicGraph.cpp
         src/client/StaticPlugins.cpp
         src/client/ClientWindow.cpp
         src/client/NetworkUtils.cpp
-        src/client/UIUtils.hpp
+        src/client/ClientSession.cpp
 )
 target_compile_features(${CLIENT} PRIVATE cxx_std_17)
 

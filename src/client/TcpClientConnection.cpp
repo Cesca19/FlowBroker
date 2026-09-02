@@ -2,10 +2,10 @@
 // Created by fran on 29/07/2026.
 //
 
-#include "TcpClient.hpp"
+#include "TcpClientConnection.hpp"
 #include <iostream>
 
-TcpClient::TcpClient(QObject *parent)
+TcpClientConnection::TcpClientConnection(QObject *parent)
     : QObject(parent)
     , m_tcpSocket(nullptr)
     , m_socketState(QAbstractSocket::UnconnectedState)
@@ -13,7 +13,7 @@ TcpClient::TcpClient(QObject *parent)
     initConnection();
 }
 
-void TcpClient::initConnection()
+void TcpClientConnection::initConnection()
 {
     m_tcpSocket = new QTcpSocket(this);
     m_socketState = m_tcpSocket->state();
@@ -25,7 +25,7 @@ void TcpClient::initConnection()
     connect(m_tcpSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(onSocketStateChanged(QAbstractSocket::SocketState)));
 }
 
-void TcpClient::connectToServer(const std::string &host, const std::uint16_t port) const
+void TcpClientConnection::connectToServer(const std::string &host, const std::uint16_t port) const
 {
     if (m_socketState != QAbstractSocket::UnconnectedState)
         return;
@@ -34,23 +34,24 @@ void TcpClient::connectToServer(const std::string &host, const std::uint16_t por
     m_tcpSocket->connectToHost(host.c_str(), port);
 }
 
-void TcpClient::disconnectFromServer() const
+void TcpClientConnection::disconnectFromServer() const
 {
     if (m_socketState == QAbstractSocket::ConnectedState)
         m_tcpSocket->disconnectFromHost();
 }
 
-void TcpClient::onConnected() const
+void TcpClientConnection::onConnected()
 {
     std::cout << "Connected successfully" << std::endl;
+    sendMessage("Hello");
 }
 
-void TcpClient::onDisconnected() const
+void TcpClientConnection::onDisconnected() const
 {
     std::cout << "Disconnected successfully" << std::endl;
 }
 
-void TcpClient::onMessageReceived()
+void TcpClientConnection::onMessageReceived()
 {
     m_buffer.append(m_tcpSocket->readAll());
 
@@ -60,38 +61,11 @@ void TcpClient::onMessageReceived()
         m_buffer.remove(0, newlineIndex + 1);
         if (line.isEmpty())
             continue;
-        handleServerMessage(line);
+        emit messageReceived(line);
     }
 }
 
-void TcpClient::handleServerMessage(const QString &message)
-{
-    const QStringList parts = message.split(':');
-
-    if (parts.isEmpty())
-        return;
-    const QString type = parts[0];
-    if (type == "TOPIC")
-        onNewTopicSnapshotReceived(parts);
-    // std::cout << "-" << message.toStdString() << "-" << std::endl;
-}
-
-void TcpClient::onNewTopicSnapshotReceived(const QStringList &message)
-{
-    // Expect: TOPIC:name:ts:value:average:min:max  -> 7 fields
-    if (message.size() != 7)
-        return;   // skip
-
-    const QString& topicName = message[1];
-    const qint64 tsNs = message[2].toLongLong();
-    const double value = message[3].toDouble();
-    const double min = message[5].toDouble();
-    const double max = message[6].toDouble();
-
-    emit newTopicReceived(topicName, tsNs / 1'000'000, value);
-}
-
-void TcpClient::onConnectionError(const QAbstractSocket::SocketError socketError)
+void TcpClientConnection::onConnectionError(const QAbstractSocket::SocketError socketError)
 {
     switch (socketError) {
         case QAbstractSocket::RemoteHostClosedError:
@@ -117,7 +91,7 @@ void TcpClient::onConnectionError(const QAbstractSocket::SocketError socketError
     }
 }
 
-void TcpClient::onSocketStateChanged(const QAbstractSocket::SocketState socketState)
+void TcpClientConnection::onSocketStateChanged(const QAbstractSocket::SocketState socketState)
 {
     switch (socketState) {
         case QAbstractSocket::UnconnectedState:
@@ -150,4 +124,14 @@ void TcpClient::onSocketStateChanged(const QAbstractSocket::SocketState socketSt
             break;
     }
     m_socketState = socketState;
+}
+
+void TcpClientConnection::sendMessage(const std::string &message)
+{
+    if (m_socketState != QAbstractSocket::ConnectedState) {
+        emit addMessage("FlowBroker Client", "Failed to send message to the server", MessageType::Warning);
+        return;
+    }
+    const std::string line = message + "\r\n";
+    m_tcpSocket->write(line.data(), static_cast<qint64>(line.size()));
 }
