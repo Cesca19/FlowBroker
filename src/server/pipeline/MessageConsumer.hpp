@@ -11,7 +11,7 @@
 class MessageConsumer {
 public:
     MessageConsumer(MessageCatalog& catalog, TopicCache& topicCache);
-    void run();
+    void run() const;
 private:
     void processMessage(const Message& message) const;
 

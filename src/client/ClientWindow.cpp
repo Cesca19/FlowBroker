@@ -107,6 +107,7 @@ void ClientWindow::onTcpConnectionStateChanged(const ConnectionState connectionS
         case ConnectionState::Connected:
             m_connectBtn->setEnabled(true);
             m_connectBtn->setText("Disconnect");
+            onTcpClientConnected();
             break;
         case ConnectionState::Closing:
             m_connectBtn->setEnabled(false);
@@ -139,4 +140,9 @@ void ClientWindow::clearGraphs()
     for (TopicGraph* graph : m_graphsByTopic)
         graph->deleteLater();
     m_graphsByTopic.clear();
+}
+
+void ClientWindow::onTcpClientConnected() const
+{
+    m_clientSession->sendHello(m_udpPort);
 }

@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <deque>
 #include <string>
+#include "../../common/Message.hpp"
 
 struct Sample {
     double value;
@@ -16,16 +17,18 @@ struct Sample {
 
 class TopicState {
 public:
-    TopicState(const std::string &topicName);
+    TopicState(const std::string &topicName, StreamType type);
     void addSample(double value, std::uint64_t timestampNs);
     double min() const;
     double max() const;
     double average() const;
     double lastValue() const;
+    StreamType type() const;
     std::string name() const;
     std::uint64_t lastTimestampNs() const;
 private:
     std::string m_topicName;
+    StreamType m_type;
     int m_recentSamplesDurationInSec;
     std::deque<Sample> m_recentSamples;
 };

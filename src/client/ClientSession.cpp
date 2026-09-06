@@ -37,6 +37,39 @@ void ClientSession::handleTcpServerMessage(const QString &message)
     // std::cout << "-" << message.toStdString() << "-" << std::endl;
 }
 
+void ClientSession::sendHello(const int m_udpPort) const
+{
+    m_tcpConnection->sendMessage("HELLO udp_port=" + std::to_string(m_udpPort));
+}
+
+void ClientSession::getTopics() const
+{
+    m_tcpConnection->sendMessage("TOPICS");
+}
+
+void ClientSession::subscribeToTopic(const std::string &topicName) const
+{
+    m_tcpConnection->sendMessage("SUB " + topicName);
+}
+
+void ClientSession::unSubscribeFromTopic(const std::string &topicName) const
+{
+    m_tcpConnection->sendMessage("UNSUB " + topicName);
+}
+
+void ClientSession::createAlert(const std::string &topicName, const std::string &topicField,
+    const std::string &op, const double value) const
+{
+    const std::string alertMessage = "ALERT " + topicName + " " +
+        topicField + " " +  op  + " " + std::to_string(value);
+    m_tcpConnection->sendMessage(alertMessage);
+}
+
+void ClientSession::sendBye() const
+{
+    m_tcpConnection->sendMessage("BYE");
+}
+
 void ClientSession::onNewTopicSnapshotReceived(const QStringList &message)
 {
     // Expect: TOPIC:name:ts:value:average:min:max  -> 7 fields
@@ -46,8 +79,8 @@ void ClientSession::onNewTopicSnapshotReceived(const QStringList &message)
     const QString& topicName = message[1];
     const qint64 tsNs = message[2].toLongLong();
     const double value = message[3].toDouble();
-    const double min = message[5].toDouble();
-    const double max = message[6].toDouble();
+    // const double min = message[5].toDouble();
+    // const double max = message[6].toDouble();
 
     emit newTopicReceived(topicName, tsNs / 1'000'000, value);
 }

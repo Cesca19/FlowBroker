@@ -8,12 +8,19 @@ TopicCache::TopicCache()
 {
 }
 
-void TopicCache::addTopicSample(const std::string &topicName, const double value, const std::uint64_t timestampNs) {
+void TopicCache::addTopic(const std::string &topicName, const StreamType type)
+{
+    std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
+    if (m_topicStatesCache.find(topicName) == m_topicStatesCache.end())
+        m_topicStatesCache.emplace(topicName, TopicState(topicName, type));
+}
+
+void TopicCache::addTopicSample(const std::string &topicName, const StreamType type, const double value, const std::uint64_t timestampNs) {
     std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
     auto it = m_topicStatesCache.find(topicName);
 
     if (it == m_topicStatesCache.end())
-        it = m_topicStatesCache.emplace(topicName, TopicState(topicName)).first;
+        it = m_topicStatesCache.emplace(topicName, TopicState(topicName, type)).first;
     it->second.addSample(value, timestampNs);
 }
 
@@ -40,4 +47,12 @@ std::vector<TopicSnapshot> TopicCache::getAllTopicsSnapshot() const
         topicSnapshots.push_back({ topicState.name(), topicState.lastTimestampNs(), topicState.lastValue(),
             topicState.average(), topicState.min(), topicState.max() });
     return topicSnapshots;
+}
+
+std::vector<TopicDescriptor> TopicCache::topics()
+{
+    std::vector<TopicDescriptor> topics;
+    for (const auto &[name, topicState] : m_topicStatesCache)
+        topics.push_back(TopicDescriptor({topicState.name(), topicState.type()}));
+    return topics;
 }

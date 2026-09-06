@@ -5,8 +5,9 @@
 #include "MessageProducer.hpp"
 #include "../data_sources/finance/SimulatedFinanceDataSource.hpp"
 
-MessageProducer::MessageProducer(boost::asio::io_context &ioContext, MessageCatalog &messageCatalog)
+MessageProducer::MessageProducer(boost::asio::io_context &ioContext, MessageCatalog &messageCatalog, TopicCache& topicCache)
     : m_ioContext(ioContext)
+    , m_topicCache(topicCache)
     , m_messageCatalog(messageCatalog)
 {
 }
@@ -14,6 +15,7 @@ MessageProducer::MessageProducer(boost::asio::io_context &ioContext, MessageCata
 void MessageProducer::start()
 {
     initDataSources();
+    initTopics();
     startDataSources();
     std::cout << "Message producer launched" << std::endl;
 }
@@ -43,6 +45,13 @@ void MessageProducer::initDataSources()
     m_dataSources.push_back(std::make_unique<SimulatedFinanceDataSource>(m_ioContext, boost::asio::chrono::milliseconds(10), appleConfig));
     m_dataSources.push_back(std::make_unique<SimulatedFinanceDataSource>(m_ioContext, boost::asio::chrono::milliseconds(50), eurUsdConfig));
     m_dataSources.push_back(std::make_unique<SimulatedFinanceDataSource>(m_ioContext, boost::asio::chrono::milliseconds(25), crudeOilConfig));
+}
+
+void MessageProducer::initTopics() const
+{
+    for (const auto& dataSource : m_dataSources)
+        for (const auto&[topic, type] : dataSource->providedTopics())
+            m_topicCache.addTopic(topic, type);
 }
 
 void MessageProducer::startDataSources() const

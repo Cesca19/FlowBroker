@@ -5,8 +5,10 @@
 #include "TcpServer.hpp"
 #include <iostream>
 
-TcpServer::TcpServer(boost::asio::io_context &ioContext, const int port)
+TcpServer::TcpServer(boost::asio::io_context &ioContext, const int port, TopicCache &topicCache)
     : m_port(port)
+    , m_nextSessionId(1)
+    , m_topicCache(topicCache)
     , m_ioContext(ioContext)
     , m_acceptor(ioContext, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port))
 {
@@ -63,6 +65,41 @@ void TcpServer::removeConnection(const std::shared_ptr<TcpConnection> &connectio
 void TcpServer::onMessageReceived(const std::shared_ptr<TcpConnection> &connection, const std::string &message)
 {
     std::cout << "TcpServer received the following message: " << message << std::endl;
+    const std::vector<std::string> messageParts = splitString(message, ' ');
+
+    if (messageParts.empty()) {
+        // print invalid message
+        return;
+    }
+    if (messageParts[0] == "HELLO") {
+        onNewClientConnected(connection, messageParts);
+        return;
+    }
+    if (connection->state() != SessionState::Ready) {
+        connection->sendMessage("425 NOT_READY");
+        return;
+    }
+    if (messageParts[0] == "TOPICS") {
+        onTopicsRequested(connection);
+        return;
+    }
+    if (messageParts[0] == "SUB") {
+        onSubscriptionRequested(connection, messageParts);
+        return;
+    }
+    if (messageParts[0] == "UNSUB") {
+        onUnsubscriptionRequested(connection, messageParts);
+        return;
+    }
+    if (messageParts[0] == "ALERT") {
+        onAlertRequested(connection, messageParts);
+        return;
+    }
+    if (messageParts[0] == "BYE") {
+        onByeRequested(connection);
+        return;
+    }
+    connection->sendMessage("400 BAD_REQUEST");
 }
 
 void TcpServer::onConnectionError(const std::shared_ptr<TcpConnection> &connection,
@@ -72,4 +109,72 @@ void TcpServer::onConnectionError(const std::shared_ptr<TcpConnection> &connecti
         std::cerr << "TcpServer connection error: " << error.message() << std::endl;
         removeConnection(connection);
     }
+}
+
+void TcpServer::onNewClientConnected(const std::shared_ptr<TcpConnection> &connection,
+    const std::vector<std::string> &helloMessageParts)
+{
+    if (helloMessageParts.size() != 2) {
+        connection->sendMessage("400 BAD_REQUEST - Invalid hello message");
+        return;
+    }
+    const std::vector<std::string> udpMessageParts = splitString(helloMessageParts[1], '=');
+    if (udpMessageParts.size() != 2 || udpMessageParts[0] != "udp_port"){
+        connection->sendMessage("400 BAD_REQUEST - No udp_port provided");
+        return;
+    }
+    const std::optional<std::uint16_t> udpPort = parsePort(udpMessageParts[1]);
+    if (!udpPort) {
+        connection->sendMessage("400 BAD_REQUEST - Invalid udp_port");
+        return;
+    }
+    const auto clientAddress = connection->getSocket().remote_endpoint().address();
+    const boost::asio::ip::udp::endpoint udpEndpoint(clientAddress, *udpPort);
+
+    connection->setSessionId(m_nextSessionId++);
+    connection->setUdpPort(*udpPort);
+    connection->setUdpEndpoint(udpEndpoint);
+    connection->setState(SessionState::Ready);
+    connection->sendMessage("200 OK session=" + std::to_string(connection->sessionId()));
+}
+
+void TcpServer::onTopicsRequested(const std::shared_ptr<TcpConnection> &connection) const
+{
+    const std::vector<TopicDescriptor> topics = m_topicCache.topics();
+    std::string reply = "210 TOPICS";
+    for (const auto &[name, type] : topics)
+        reply += " " + name + ":" + streamTypeToString(type);
+    connection->sendMessage(reply);
+}
+
+void TcpServer::onSubscriptionRequested(const std::shared_ptr<TcpConnection> &connection,
+    std::vector<std::string> subMessageParts)
+{
+}
+
+void TcpServer::onUnsubscriptionRequested(const std::shared_ptr<TcpConnection> &connection,
+    std::vector<std::string> unsubMessageParts)
+{
+}
+
+void TcpServer::onAlertRequested(const std::shared_ptr<TcpConnection> &connection,
+    std::vector<std::string> alertMessageParts)
+{
+}
+
+void TcpServer::onByeRequested(const std::shared_ptr<TcpConnection> &connection)
+{
+}
+
+std::string TcpServer::streamTypeToString(const StreamType type)
+{
+    switch (type) {
+        case StreamType::FINANCE:
+            return "FINANCE";
+        case StreamType::WEATHER:
+            return "WEATHER";
+        case StreamType::SENSOR:
+            return "SENSOR";
+    }
+    return "UNKNOWN";
 }

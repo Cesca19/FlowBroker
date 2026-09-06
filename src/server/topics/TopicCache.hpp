@@ -10,13 +10,16 @@
 #include <unordered_map>
 #include "TopicState.hpp"
 #include "../../common/TopicSnapshot.hpp"
+#include "../../common/TopicDescriptor.hpp"
 
 class TopicCache {
 public:
     TopicCache();
-    void addTopicSample(const std::string &topicName, double value, std::uint64_t timestampNs);
+    void addTopic(const std::string &topicName, StreamType type);
+    void addTopicSample(const std::string &topicName, StreamType type, double value, std::uint64_t timestampNs);
     TopicSnapshot getTopicSnapshot(const std::string &topicName) const;
     std::vector<TopicSnapshot> getAllTopicsSnapshot() const;
+    std::vector<TopicDescriptor> topics();
 private:
     std::unordered_map<std::string, TopicState> m_topicStatesCache;
     mutable std::mutex m_topicStateCacheMutex;

@@ -12,9 +12,9 @@ class SimulatedFinanceDataSource : public SimulatedDataSource {
 public:
     SimulatedFinanceDataSource(boost::asio::io_context& ioContext, boost::asio::chrono::milliseconds periodInMilliseconds,
         const FinancialAssetConfig& config);
+    std::vector<TopicDescriptor> providedTopics() const override;
 private:
     Message generateMessage() override;
-
     SimulatedFinancialAsset m_simulatedFinancialAsset;
 };
 

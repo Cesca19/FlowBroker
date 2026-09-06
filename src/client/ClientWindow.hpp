@@ -33,6 +33,7 @@ private slots:
 private:
     TopicGraph* findOrCreateGraph(const QString& topicName);
     void clearGraphs();
+    void onTcpClientConnected() const;
 
     int m_tcpPort;
     int m_udpPort;

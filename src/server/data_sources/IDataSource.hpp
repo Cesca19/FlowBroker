@@ -7,6 +7,7 @@
 
 #include <functional>
 #include "../../common/Message.hpp"
+#include "../../common/TopicDescriptor.hpp"
 
 // The contract every data source obeys, whether it wraps a GBM simulation or a
 // live WebSocket feed. The server depends only on this interface: it holds a list of IDataSource
@@ -16,6 +17,7 @@ public:
     virtual ~IDataSource() = default;
     virtual void start(std::function<void(const Message&)> deliverMessage) = 0;
     virtual void stop() = 0;
+    virtual std::vector<TopicDescriptor> providedTopics() const = 0;
 };
 
 #endif //FLOWBROKER_IDATASOURCE_HPP

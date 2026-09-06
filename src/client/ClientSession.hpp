@@ -21,6 +21,14 @@ signals:
 private slots:
     void handleTcpServerMessage(const QString &messageContent);
 
+public slots:
+    void sendHello(int m_udpPort) const;
+    void getTopics() const;
+    void subscribeToTopic(const std::string &topicName) const;
+    void unSubscribeFromTopic(const std::string &topicName) const;
+    void createAlert(const std::string &topicName, const std::string &topicField, const std::string &op,
+        double value) const;
+    void sendBye() const;
 private:
     void onNewTopicSnapshotReceived(const QStringList &message);
 

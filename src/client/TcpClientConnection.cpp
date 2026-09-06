@@ -43,7 +43,6 @@ void TcpClientConnection::disconnectFromServer() const
 void TcpClientConnection::onConnected()
 {
     std::cout << "Connected successfully" << std::endl;
-    sendMessage("Hello");
 }
 
 void TcpClientConnection::onDisconnected() const
@@ -93,6 +92,7 @@ void TcpClientConnection::onConnectionError(const QAbstractSocket::SocketError s
 
 void TcpClientConnection::onSocketStateChanged(const QAbstractSocket::SocketState socketState)
 {
+    m_socketState = socketState;
     switch (socketState) {
         case QAbstractSocket::UnconnectedState:
             std::cout << "Entering unconnected state" << std::endl;
@@ -123,7 +123,6 @@ void TcpClientConnection::onSocketStateChanged(const QAbstractSocket::SocketStat
         default:
             break;
     }
-    m_socketState = socketState;
 }
 
 void TcpClientConnection::sendMessage(const std::string &message)

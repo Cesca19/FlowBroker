@@ -4,8 +4,9 @@
 
 #include "TopicState.hpp"
 
-TopicState::TopicState(const std::string &topicName)
+TopicState::TopicState(const std::string &topicName, StreamType type)
     : m_topicName(topicName)
+    , m_type(type)
     , m_recentSamplesDurationInSec(5)
 {
 }
@@ -56,6 +57,11 @@ double TopicState::lastValue() const
     if (m_recentSamples.empty())
         return 0.0;
     return m_recentSamples.back().value;
+}
+
+StreamType TopicState::type() const
+{
+    return m_type;
 }
 
 std::string TopicState::name() const

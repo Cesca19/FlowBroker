@@ -29,9 +29,10 @@ private slots:
     void onConnectionError(QAbstractSocket::SocketError socketError);
     void onSocketStateChanged(QAbstractSocket::SocketState socketState);
 
-private:
+public:
     void sendMessage(const std::string &message);
 
+private:
     QTcpSocket *m_tcpSocket;
     QByteArray m_buffer;
     QAbstractSocket::SocketState m_socketState;

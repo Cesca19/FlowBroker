@@ -40,6 +40,46 @@ void TcpConnection::sendMessage(const std::string &messageToSend)
         m_messagesToSend.push(message);
 }
 
+void TcpConnection::setSessionId(const int sessionId)
+{
+    m_sessionId = sessionId;
+}
+
+void TcpConnection::setUdpPort(const std::uint16_t udpPort)
+{
+    m_udpPort = udpPort;
+}
+
+void TcpConnection::setState(const SessionState sessionState)
+{
+    m_sessionState = sessionState;
+}
+
+void TcpConnection::setUdpEndpoint(const boost::asio::ip::udp::endpoint &udpEndpoint)
+{
+    m_udpEndpoint = udpEndpoint;
+}
+
+int TcpConnection::sessionId() const
+{
+    return m_sessionId;
+}
+
+std::uint16_t TcpConnection::udpPort() const
+{
+    return m_udpPort;
+}
+
+SessionState TcpConnection::state() const
+{
+    return m_sessionState;
+}
+
+boost::asio::ip::udp::endpoint TcpConnection::udpEndpoint() const
+{
+    return m_udpEndpoint;
+}
+
 void TcpConnection::readMessage()
 {
     m_socket.async_read_some(boost::asio::buffer(m_messageToRead),
@@ -60,6 +100,9 @@ TcpConnection::TcpConnection(boost::asio::io_context &ioContext)
     , m_onDisconnect(nullptr)
     , m_onMessageReceived(nullptr)
     , m_onError(nullptr)
+    , m_sessionId(0)
+    , m_udpPort(0)
+    , m_sessionState(SessionState::Connected)
 {
 }
 

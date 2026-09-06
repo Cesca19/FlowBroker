@@ -9,10 +9,10 @@ Server::Server(boost::asio::io_context &ioContext, MessageCatalog &catalog, Topi
     , m_signals(ioContext, SIGINT)
     , m_messageCatalog(catalog)
     , m_topicCache(topicCache)
-    , m_messageProducer(ioContext, m_messageCatalog)
+    , m_messageProducer(ioContext, m_messageCatalog, topicCache)
     , m_dashBoardRefreshTimer(ioContext)
     , m_refreshTime(1)
-    , m_tcpServer(ioContext, tcpPort)
+    , m_tcpServer(ioContext, tcpPort, topicCache)
 {
 }
 
@@ -54,7 +54,7 @@ void Server::refreshTopicsDashBoard(const boost::system::error_code &error)
         // std::cout << topicMessage;
         messageToSend += topicMessage;
     }
-    m_tcpServer.sendMessageToAllClients(messageToSend);
+    // m_tcpServer.sendMessageToAllClients(messageToSend);
     m_dashBoardRefreshTimer.expires_at(m_dashBoardRefreshTimer.expiry() + m_refreshTime);
     m_dashBoardRefreshTimer.async_wait(std::bind(&Server::refreshTopicsDashBoard, this, std::placeholders::_1));
 }

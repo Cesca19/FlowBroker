@@ -75,6 +75,7 @@ add_executable(${SERVER}
         src/server/network/TcpConnection.cpp
         src/server/network/TcpServer.cpp
         src/server/network/UdpSender.cpp
+        src/server/network/NetworkUtils.cpp
         src/server/network/Server.cpp
 )
 target_compile_features(${SERVER} PRIVATE cxx_std_17)
@@ -92,6 +93,15 @@ add_executable(${CLIENT}
         src/client/ClientSession.cpp
 )
 target_compile_features(${CLIENT} PRIVATE cxx_std_17)
+
+if (MSVC)
+    set(FLOWBROKER_WARNINGS /W4)
+else()
+    set(FLOWBROKER_WARNINGS -Wall -Wextra)
+endif()
+
+target_compile_options(${SERVER} PRIVATE ${FLOWBROKER_WARNINGS})
+target_compile_options(${CLIENT} PRIVATE ${FLOWBROKER_WARNINGS})
 
 set(CLIENT_QT_LIBS "")
 if(RUNTIME_LINK STREQUAL "static")
