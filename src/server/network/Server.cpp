@@ -39,6 +39,10 @@ void Server::stop()
 
 void Server::refreshTopicsDashBoard(const boost::system::error_code &error)
 {
+    if (error == boost::asio::error::operation_aborted) {
+        // Timer was canceled, likely due to server shutdown. No action needed.
+        return;
+    }
     if (error) {
         std::cerr << "Error in timer refresh: " << error.message() << std::endl;
         return;

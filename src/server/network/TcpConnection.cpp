@@ -121,7 +121,10 @@ void TcpConnection::handleWrite(const boost::system::error_code &error, size_t b
 
 void TcpConnection::handleRead(const boost::system::error_code &error, size_t bytes_transferred)
 {
-    if (error == boost::asio::error::eof && m_onDisconnect) {
+    if (error == boost::asio::error::eof 
+        || error == boost::asio::error::connection_reset
+        || error == boost::asio::error::connection_aborted
+        && m_onDisconnect) {
         m_onDisconnect(shared_from_this());
         return;
     }
