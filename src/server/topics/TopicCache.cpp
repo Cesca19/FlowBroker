@@ -49,9 +49,11 @@ std::vector<TopicSnapshot> TopicCache::getAllTopicsSnapshot() const
     return topicSnapshots;
 }
 
-std::vector<TopicDescriptor> TopicCache::topics()
+std::vector<TopicDescriptor> TopicCache::topics() const
 {
     std::vector<TopicDescriptor> topics;
+    std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
+    
     for (const auto &[name, topicState] : m_topicStatesCache)
         topics.push_back(TopicDescriptor({topicState.name(), topicState.type()}));
     return topics;
