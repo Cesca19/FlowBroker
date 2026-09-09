@@ -16,7 +16,7 @@ SimulatedFinancialAsset::SimulatedFinancialAsset(const FinancialAssetConfig &con
 
 double SimulatedFinancialAsset::getNextPrice()
 {
-    // generate prices using geometric brownian motion discretized over a time step m_deltaTime.
+    // Generate prices using geometric brownian motion discretized over a time step m_deltaTime.
     // Scaling both terms by the step makes the dynamics independent of the tick
     // rate: drift scales with dt, the random shock with sqrt(dt) (variance grows
     // linearly with time, so standard deviation grows with its square root).

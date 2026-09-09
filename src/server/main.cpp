@@ -2,6 +2,44 @@
 // Created by fran on 06/07/2026.
 //
 
+/**
+ * @file main.cpp
+ * @brief Entry point of the FlowBroker server.
+ *
+ * Parses the command line, then builds and runs
+ * the server. FlowBroker ingests real-time data streams and routes them, by
+ * topic, to subscribed clients. A "topic" is a named stream such as a stock
+ * price or a weather reading.
+ *
+ * Here is the path of a message through the server:
+ *   - Data sources (IDataSource, e.g. SimulatedFinanceDataSource) produce the
+ *     raw values of one or more topics.
+ *   - The producer (MessageProducer) starts the sources and pushes their
+ *     messages into the catalog.
+ *   - The catalog (MessageCatalog) is the thread-safe queue linking producer
+ *     and consumer.
+ *   - The consumer (MessageConsumer) drains the catalog and updates the cache.
+ *   - The cache (TopicCache) holds the latest value and stats of every topic.
+ *   - The server (Server, which owns TcpServer and per-client TcpConnection)
+ *     accepts clients and serves them topic data.
+ *
+ * Threads (only two are started here; the main itself waits):
+ *   - Server thread: runs Server::run, which starts the producer and then
+ *     drives the single Asio io_context. Everything asynchronous happens here:
+ *     the data source timers that produce messages, accepting TCP clients,
+ *     sending, and the dashboard refresh timer. The producer has no thread of
+ *     its own; its work is driven by those timers on this thread.
+ *   - Consumer thread: runs MessageConsumer::run, a blocking loop that pops
+ *     from the catalog and writes to the cache.
+ *   - Main thread: builds the pieces, launches the two threads, and blocks on
+ *     join until they finish.
+ *
+ * MessageCatalog is the hand-off point between the two threads: the producer
+ * side (server thread) fills it, the consumer thread drains it. It encapsulates
+ * its own mutex and condition variable, so callers never lock anything
+ * themselves to use it safely.
+ */
+
 #include <iostream>
 #include "pipeline/MessageConsumer.hpp"
 #include "network/Server.hpp"
