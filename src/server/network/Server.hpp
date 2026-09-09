@@ -10,9 +10,18 @@
 #include "../topics/TopicCache.hpp"
 #include "../pipeline/MessageProducer.hpp"
 
+/**
+ * @class Server
+ * @brief Manages the whole server and drives the io_context.
+ *
+ * Owns the message producer, the TCP server, the shutdown signal handler and the
+ * dashboard refresh timer, all sharing one io_context.
+ */
 class Server {
 public:
     Server(boost::asio::io_context &ioContext, MessageCatalog &catalog, TopicCache &topicCache, int tcpPort);
+    
+    /// Start the producer and timers, then run the io_context.
     void run();
     void stop();
 private:

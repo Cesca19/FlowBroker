@@ -123,9 +123,9 @@ void TcpConnection::handleRead(const boost::system::error_code &error, size_t by
 {
     if (error == boost::asio::error::eof 
         || error == boost::asio::error::connection_reset
-        || error == boost::asio::error::connection_aborted
-        && m_onDisconnect) {
-        m_onDisconnect(shared_from_this());
+        || error == boost::asio::error::connection_aborted) {
+        if (m_onDisconnect)
+            m_onDisconnect(shared_from_this());
         return;
     }
     if (error && m_onError) {

@@ -10,16 +10,34 @@
 #include "NetworkUtils.hpp"
 #include "../topics/TopicCache.hpp"
 
+/**
+ * @class TcpServer
+ * @brief Accepts tcp clients and dispatches their commands.
+ *
+ * Runs an asynchronous accept loop (so it serves several clients at once), keeps
+ * one TcpConnection per client, and interprets the text protocol: HELLO, TOPICS,
+ * SUB, UNSUB, ALERT, BYE.
+ * It enforces the session rule: only HELLO is allowed before a client is READY;
+ * anything else earlier gets 425 NOT_READY.
+ *
+ * Runs on the server thread (the one driving the io_context).
+ */
 class TcpServer {
 public:
     TcpServer(boost::asio::io_context& ioContext, int port, TopicCache &topicCache);
+    
+    /// Log the listening port and launch the first accept.
     void run();
+
+    /// Launch one async accept for the next client.
     void startAccept();
     void handleAccept(const std::shared_ptr<TcpConnection> &newConnection, const boost::system::error_code &error);
     void sendMessageToAllClients(const std::string &messageToSend) const;
 private:
     void addConnection(const std::shared_ptr<TcpConnection> &newConnection);
     void removeConnection(const std::shared_ptr<TcpConnection> &connectionToRemove);
+    
+    /// Parse one received line and dispatch to the matching command handler.
     void onMessageReceived(const std::shared_ptr<TcpConnection> &connection, const std::string &message);
     void onConnectionError(const std::shared_ptr<TcpConnection> &connection, const boost::system::error_code &error);
 

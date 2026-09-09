@@ -9,15 +9,48 @@
 #include <memory>
 #include <boost/asio.hpp>
 
+/// Session state: CONNECTED = TCP up but no valid HELLO yet, READY = HELLO done.
 enum class SessionState { Connected, Ready };
 
+/**
+ * @class TcpConnection
+ * @brief It represents a single TCP connection to a client.
+ *
+ * Owns the client's socket, turns the incoming  messages byte stream into complete
+ * CRLF-terminated lines, and sends replies. It also holds the per-client
+ * session data: session id, session state, and the UDP endpoint where this
+ * client's data stream will be pushed. The server identifies a client by its
+ * TcpConnection object.
+ *
+ * Lifetime: managed by shared_ptr and enable_shared_from_this. Every async
+ * operation binds shared_from_this() into its handler, so the object stays
+ * alive as long as a read or write is pending, and is destroyed only once no
+ * operation and no external owner remain.
+ *
+ * Created through the static create(); the constructor is private so a
+ * TcpConnection can only ever exist as a shared_ptr.
+ */
 class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
 public:
+    /// Create a connection as a shared_ptr (the only way to build one).
     static std::shared_ptr<TcpConnection> create(boost::asio::io_context &ioContext);
+    
+    /// The underlying socket of this connection.
     boost::asio::ip::tcp::socket& getSocket();
+    
+    /// Begin reading from the client (launch the first async read).
     void start();
+    
+    /**
+     * @brief Wire up the callbacks the server reacts to.
+     * @param onMessageReceived  Called with each complete line received.
+     * @param onDisconnect       Called when the client closes the connection.
+     * @param onError            Called on a socket error.
+     */
     void initCallbacks(std::function<void(std::shared_ptr<TcpConnection>, std::string)> onMessageReceived,
         std::function<void(std::shared_ptr<TcpConnection>)> onDisconnect, std::function<void(std::shared_ptr<TcpConnection>, boost::system::error_code)> onError);
+    
+    /// Dispatch a line to send to the client (CRLF is appended); sends immediately if idle.
     void sendMessage(const std::string &messageToSend);
 
     void setSessionId(int sessionId);
