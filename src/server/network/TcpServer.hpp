@@ -49,6 +49,9 @@ private:
     void onByeRequested(const std::shared_ptr<TcpConnection> &connection);
 
     static std::string streamTypeToString(StreamType type);
+    void subscribeConnectionToTopic(const std::shared_ptr<TcpConnection> &connection, const std::string &topicName);
+    void unsubscribeConnectionFromTopic(const std::shared_ptr<TcpConnection> &connection, const std::string &topicName);
+    void unsubscribeConnectionFromAllTopics(const std::shared_ptr<TcpConnection> &connection);
 
     int m_port;
     int m_nextSessionId;
@@ -56,6 +59,7 @@ private:
     boost::asio::io_context& m_ioContext;
     boost::asio::ip::tcp::acceptor m_acceptor;
     std::unordered_set<std::shared_ptr<TcpConnection>> m_activeConnections;
+    std::unordered_map<std::string, std::unordered_set<std::shared_ptr<TcpConnection>>> m_topicSubscriptions;
 };
 
 

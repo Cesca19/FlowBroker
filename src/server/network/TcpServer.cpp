@@ -56,6 +56,8 @@ void TcpServer::addConnection(const std::shared_ptr<TcpConnection> &newConnectio
 
 void TcpServer::removeConnection(const std::shared_ptr<TcpConnection> &connectionToRemove)
 {
+    unsubscribeConnectionFromAllTopics(connectionToRemove);
+
     const auto it = m_activeConnections.find(connectionToRemove);
     if (it != m_activeConnections.end())
         m_activeConnections.erase(it);
@@ -150,6 +152,23 @@ void TcpServer::onTopicsRequested(const std::shared_ptr<TcpConnection> &connecti
 void TcpServer::onSubscriptionRequested(const std::shared_ptr<TcpConnection> &connection,
     std::vector<std::string> subMessageParts)
 {
+    if (subMessageParts.size() != 2) {
+        connection->sendMessage("400 BAD_REQUEST - Invalid subscription message");
+        return;
+    }
+
+    const std::string &topicName = subMessageParts[1];
+
+    if (!m_topicCache.hasTopic(topicName)) {
+        connection->sendMessage("404 UNKNOWN_TOPIC " + topicName);
+        return;
+    }
+    subscribeConnectionToTopic(connection, topicName);
+
+    // TODO: once topics carry an id and a schema, reply with the full line:
+    // 201 SUBSCRIBED topic_id=<id> type=<TYPE> fields=[<name>,<name>,...]
+    std::string reply = "201 SUBSCRIBED ";
+    connection->sendMessage(reply + topicName);
 }
 
 void TcpServer::onUnsubscriptionRequested(const std::shared_ptr<TcpConnection> &connection,
@@ -177,4 +196,31 @@ std::string TcpServer::streamTypeToString(const StreamType type)
             return "SENSOR";
     }
     return "UNKNOWN";
+}
+
+void TcpServer::subscribeConnectionToTopic(const std::shared_ptr<TcpConnection> &connection, const std::string &topicName)
+{
+    connection->subscribeToTopic(topicName);
+    if (m_topicSubscriptions.find(topicName) == m_topicSubscriptions.end())
+        m_topicSubscriptions.emplace(topicName, std::unordered_set<std::shared_ptr<TcpConnection>>());
+    m_topicSubscriptions[topicName].insert(connection);
+}
+
+void TcpServer::unsubscribeConnectionFromTopic(const std::shared_ptr<TcpConnection> &connection, 
+    const std::string &topicName)
+{
+    connection->unsubscribeFromTopic(topicName);
+    if (m_topicSubscriptions.find(topicName) == m_topicSubscriptions.end())
+        return;
+    std::unordered_set<std::shared_ptr<TcpConnection>> &subscribers = m_topicSubscriptions[topicName];
+    if (subscribers.find(connection) != subscribers.end())
+        subscribers.erase(connection);
+}
+
+void TcpServer::unsubscribeConnectionFromAllTopics(const std::shared_ptr<TcpConnection> &connection)
+{
+    std::unordered_set<std::string> subscribedTopics = connection->subscribedTopics();
+
+    for (const auto &topic : subscribedTopics)
+        unsubscribeConnectionFromTopic(connection, topic);
 }

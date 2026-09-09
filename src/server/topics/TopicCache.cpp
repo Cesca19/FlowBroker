@@ -58,3 +58,10 @@ std::vector<TopicDescriptor> TopicCache::topics() const
         topics.push_back(TopicDescriptor({topicState.name(), topicState.type()}));
     return topics;
 }
+
+bool TopicCache::hasTopic(const std::string &topicName) const
+{
+    std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
+    
+    return m_topicStatesCache.find(topicName) != m_topicStatesCache.end();
+}

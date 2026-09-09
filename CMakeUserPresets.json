@@ -9,7 +9,7 @@
     "configurePresets": [
         {
             "name": "compile-commands",
-            "inherits": "conan-debug",
+            "inherits": "conan-default",
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }

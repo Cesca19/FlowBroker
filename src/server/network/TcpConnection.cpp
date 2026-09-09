@@ -80,6 +80,22 @@ boost::asio::ip::udp::endpoint TcpConnection::udpEndpoint() const
     return m_udpEndpoint;
 }
 
+void TcpConnection::subscribeToTopic(const std::string &topicName)
+{
+    m_subscribedTopics.insert(topicName);
+}
+
+void TcpConnection::unsubscribeFromTopic(const std::string &topicName)
+{
+    if (auto it = m_subscribedTopics.find(topicName); it != m_subscribedTopics.end())
+        m_subscribedTopics.erase(it);
+}
+
+std::unordered_set<std::string> TcpConnection::subscribedTopics() const
+{
+    return m_subscribedTopics;
+}
+
 void TcpConnection::readMessage()
 {
     m_socket.async_read_some(boost::asio::buffer(m_messageToRead),

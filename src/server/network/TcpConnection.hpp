@@ -7,6 +7,7 @@
 
 #include <queue>
 #include <memory>
+#include <unordered_set>
 #include <boost/asio.hpp>
 
 /// Session state: CONNECTED = TCP up but no valid HELLO yet, READY = HELLO done.
@@ -61,6 +62,9 @@ public:
     std::uint16_t udpPort() const;
     SessionState state() const;
     boost::asio::ip::udp::endpoint udpEndpoint() const;
+    void subscribeToTopic(const std::string &topicName);
+    void unsubscribeFromTopic(const std::string &topicName);
+    std::unordered_set<std::string> subscribedTopics() const;
 private:
     void readMessage();
     void sendNextMessage();
@@ -73,6 +77,7 @@ private:
     SessionState m_sessionState;
     std::string m_pendingMessage;
     boost::asio::ip::udp::endpoint m_udpEndpoint;
+    std::unordered_set<std::string> m_subscribedTopics;
     std::queue<std::string> m_messagesToSend;
     std::array<char, 512> m_messageToRead;
     boost::asio::ip::tcp::socket m_socket;

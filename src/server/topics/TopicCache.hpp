@@ -43,6 +43,8 @@ public:
     
     /// Name and type of every known topic (used to answer the TOPICS command).
     std::vector<TopicDescriptor> topics() const;
+
+    bool hasTopic(const std::string &topicName) const;
 private:
     std::unordered_map<std::string, TopicState> m_topicStatesCache;
     mutable std::mutex m_topicStateCacheMutex; ///< Guards the map; mutable so const readers can lock.
