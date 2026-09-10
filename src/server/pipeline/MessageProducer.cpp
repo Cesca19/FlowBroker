@@ -50,8 +50,8 @@ void MessageProducer::initDataSources()
 void MessageProducer::initTopics() const
 {
     for (const auto& dataSource : m_dataSources)
-        for (const auto&[topic, type] : dataSource->providedTopics())
-            m_topicCache.addTopic(topic, type);
+        for (const auto &topicDescriptor : dataSource->providedTopics())
+            m_topicCache.addTopic(topicDescriptor);
 }
 
 void MessageProducer::startDataSources() const

@@ -4,9 +4,9 @@
 
 #include "TopicState.hpp"
 
-TopicState::TopicState(const std::string &topicName, StreamType type)
-    : m_topicName(topicName)
-    , m_type(type)
+TopicState::TopicState(const TopicDescriptor &descriptor, const unsigned int topicId)
+    : m_topicDescriptor(descriptor)
+    , m_Id(topicId)
     , m_recentSamplesDurationInSec(5)
 {
 }
@@ -61,12 +61,17 @@ double TopicState::lastValue() const
 
 StreamType TopicState::type() const
 {
-    return m_type;
+    return m_topicDescriptor.type;
 }
 
 std::string TopicState::name() const
 {
-    return m_topicName;
+    return m_topicDescriptor.name;
+}
+
+unsigned int TopicState::id() const
+{
+    return m_Id;
 }
 
 std::uint64_t TopicState::lastTimestampNs() const
@@ -74,4 +79,9 @@ std::uint64_t TopicState::lastTimestampNs() const
     if (m_recentSamples.empty())
         return 0;
     return m_recentSamples.back().timestampNs;
+}
+
+TopicDescriptor TopicState::descriptor() const
+{
+    return m_topicDescriptor;
 }

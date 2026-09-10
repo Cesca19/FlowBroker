@@ -27,5 +27,5 @@ void MessageConsumer::processMessage(const Message &message) const
         return; // nothing to record
     // for now we only handle messages with one value
     // later we might handle the cache like topic-value0 topic-value1 etc so we will have multiple topic states by Topic
-    m_topicCache.addTopicSample(message.topic, message.type, message.values[0], message.timestampNs);
+    m_topicCache.addTopicSample(message.topic, message.values[0], message.timestampNs);
 }

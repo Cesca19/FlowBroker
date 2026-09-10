@@ -10,7 +10,7 @@ TcpServer::TcpServer(boost::asio::io_context &ioContext, const int port, TopicCa
     , m_nextSessionId(1)
     , m_topicCache(topicCache)
     , m_ioContext(ioContext)
-    , m_acceptor(ioContext, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port))
+    , m_acceptor(ioContext, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), static_cast<boost::asio::ip::port_type>(port)))
 {
 }
 
@@ -144,7 +144,7 @@ void TcpServer::onTopicsRequested(const std::shared_ptr<TcpConnection> &connecti
 {
     const std::vector<TopicDescriptor> topics = m_topicCache.topics();
     std::string reply = "210 TOPICS";
-    for (const auto &[name, type] : topics)
+    for (const auto &[name, type, schema] : topics)
         reply += " " + name + ":" + streamTypeToString(type);
     connection->sendMessage(reply);
 }
@@ -165,10 +165,9 @@ void TcpServer::onSubscriptionRequested(const std::shared_ptr<TcpConnection> &co
     }
     subscribeConnectionToTopic(connection, topicName);
 
-    // TODO: once topics carry an id and a schema, reply with the full line:
-    // 201 SUBSCRIBED topic_id=<id> type=<TYPE> fields=[<name>,<name>,...]
-    std::string reply = "201 SUBSCRIBED ";
-    connection->sendMessage(reply + topicName);
+    unsigned int id = m_topicCache.topicId(topicName);
+    std::vector<std::string> schema = m_topicCache.topicSchema(topicName);
+    connection->sendMessage("201 SUBSCRIBED " + formatSubscribedTopicInfo(topicName, id, schema));
 }
 
 void TcpServer::onUnsubscriptionRequested(const std::shared_ptr<TcpConnection> &connection,
@@ -223,4 +222,15 @@ void TcpServer::unsubscribeConnectionFromAllTopics(const std::shared_ptr<TcpConn
 
     for (const auto &topic : subscribedTopics)
         unsubscribeConnectionFromTopic(connection, topic);
+}
+
+std::string TcpServer::formatSubscribedTopicInfo(const std::string &topicName, unsigned int id, const std::vector<std::string> &schema)
+{
+    std::string message = "topic_name=" + topicName + " topic_id=" + std::to_string(id) + " type=[";
+
+    for (const auto &field: schema)
+        message += field + ",";
+    message.pop_back();
+    message += "]";
+    return message;
 }

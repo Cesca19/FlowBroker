@@ -13,7 +13,7 @@ SimulatedFinanceDataSource::SimulatedFinanceDataSource(boost::asio::io_context &
 
 std::vector<TopicDescriptor> SimulatedFinanceDataSource::providedTopics() const
 {
-    return {{m_simulatedFinancialAsset.getName(), StreamType::FINANCE}};
+    return {{m_simulatedFinancialAsset.getName(), StreamType::FINANCE, {"price"}}};
 }
 
 Message SimulatedFinanceDataSource::generateMessage()

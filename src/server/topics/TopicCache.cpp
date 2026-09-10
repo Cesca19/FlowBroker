@@ -2,25 +2,29 @@
 // Created by fran on 27/07/2026.
 //
 
+#include <iostream>
 #include "TopicCache.hpp"
 
 TopicCache::TopicCache()
+    : m_nextTopicId(1)
 {
 }
 
-void TopicCache::addTopic(const std::string &topicName, const StreamType type)
+void TopicCache::addTopic(const TopicDescriptor &topicDescriptor)
 {
     std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
-    if (m_topicStatesCache.find(topicName) == m_topicStatesCache.end())
-        m_topicStatesCache.emplace(topicName, TopicState(topicName, type));
+    if (m_topicStatesCache.find(topicDescriptor.name) == m_topicStatesCache.end())
+        m_topicStatesCache.emplace(topicDescriptor.name, TopicState(topicDescriptor, m_nextTopicId++));
 }
 
-void TopicCache::addTopicSample(const std::string &topicName, const StreamType type, const double value, const std::uint64_t timestampNs) {
+void TopicCache::addTopicSample(const std::string &topicName, const double value, const std::uint64_t timestampNs) {
     std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
     auto it = m_topicStatesCache.find(topicName);
 
-    if (it == m_topicStatesCache.end())
-        it = m_topicStatesCache.emplace(topicName, TopicState(topicName, type)).first;
+    if (it == m_topicStatesCache.end()) {
+        std::cerr << "TopicCache: undeclared topic " << topicName << std::endl;
+        return;
+    }
     it->second.addSample(value, timestampNs);
 }
 
@@ -55,7 +59,7 @@ std::vector<TopicDescriptor> TopicCache::topics() const
     std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
     
     for (const auto &[name, topicState] : m_topicStatesCache)
-        topics.push_back(TopicDescriptor({topicState.name(), topicState.type()}));
+        topics.push_back(topicState.descriptor());
     return topics;
 }
 
@@ -64,4 +68,21 @@ bool TopicCache::hasTopic(const std::string &topicName) const
     std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
     
     return m_topicStatesCache.find(topicName) != m_topicStatesCache.end();
+}
+
+unsigned int TopicCache::topicId(const std::string &topicName) const
+{
+    auto it = m_topicStatesCache.find(topicName);
+    
+    if (it == m_topicStatesCache.end())
+        return 0;
+    return it->second.id();
+}
+
+std::vector<std::string> TopicCache::topicSchema(const std::string &topicName) const
+{
+    auto it = m_topicStatesCache.find(topicName);
+    if (it == m_topicStatesCache.end())
+        return std::vector<std::string>();
+    return it->second.descriptor().schema;
 }

@@ -6,11 +6,9 @@
 #define FLOWBROKER_TOPICCACHE_HPP
 
 #include <mutex>
-#include <vector>
 #include <unordered_map>
 #include "TopicState.hpp"
 #include "../../common/TopicSnapshot.hpp"
-#include "../../common/TopicDescriptor.hpp"
 
 /**
  * @class TopicCache
@@ -30,10 +28,10 @@ public:
     TopicCache();
 
     /// Declare a topic with no data yet, so it is known before its first value.
-    void addTopic(const std::string &topicName, StreamType type);
+    void addTopic(const TopicDescriptor &topicDescriptor);
 
     /// Record a sample for a topic, creating the topic if it is seen first here.
-    void addTopicSample(const std::string &topicName, StreamType type, double value, std::uint64_t timestampNs);
+    void addTopicSample(const std::string &topicName, double value, const std::uint64_t timestampNs);
     
     /// Snapshot of one topic's current state (empty snapshot if unknown).
     TopicSnapshot getTopicSnapshot(const std::string &topicName) const;
@@ -45,7 +43,10 @@ public:
     std::vector<TopicDescriptor> topics() const;
 
     bool hasTopic(const std::string &topicName) const;
+    unsigned int topicId(const std::string &topicName) const;
+    std::vector<std::string> topicSchema(const std::string &topicName) const;
 private:
+    int m_nextTopicId;
     std::unordered_map<std::string, TopicState> m_topicStatesCache;
     mutable std::mutex m_topicStateCacheMutex; ///< Guards the map; mutable so const readers can lock.
 };

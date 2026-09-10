@@ -192,7 +192,7 @@ Defined codes:
 ```
 2xx  Success
   200  OK                 generic acknowledgement of an accepted command
-  201  SUBSCRIBED         subscription established; carries topic_id, type, fields
+  201  SUBSCRIBED         subscription established; carries topic_name topic_id, type, fields
   202  UNSUBSCRIBED       subscription cancelled
   203  ALERT_SET          alert registered; carries its id
   210  TOPICS             list of available topics; carries name:type pairs
@@ -212,7 +212,7 @@ Defined codes:
 Reply formats that carry extra data:
 
 ```
-201 SUBSCRIBED topic_id=<int> type=<TYPE> fields=[<name>,<name>,...]
+201 SUBSCRIBED topic_name=<name> topic_id=<int> type=<TYPE> fields=[<name>,<name>,...]
 203 ALERT_SET id=<int>
 210 TOPICS <name>:<TYPE> <name>:<TYPE> ...
 300 ALERT id=<int> <topic> <field> <value> <op> <threshold>
@@ -256,9 +256,9 @@ S: 200 OK session=7
 C: TOPICS
 S: 210 TOPICS AAPL:FINANCE Paris:WEATHER capteur-A:SENSOR
 C: SUB AAPL
-S: 201 SUBSCRIBED topic_id=2 type=FINANCE fields=[price]
+S: 201 SUBSCRIBED topic_name=AAPL topic_id=2 type=FINANCE fields=[price]
 C: SUB Paris
-S: 201 SUBSCRIBED topic_id=5 type=WEATHER fields=[temp,wind,pressure]
+S: 201 SUBSCRIBED topic_name=Paris topic_id=5 type=WEATHER fields=[temp,wind,pressure]
 C: ALERT AAPL price > 500.00
 S: 203 ALERT_SET id=3
 S: 300 ALERT id=3 AAPL price 501.20 > 500.00

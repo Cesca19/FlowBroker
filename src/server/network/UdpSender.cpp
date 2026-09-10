@@ -7,7 +7,7 @@
 
 UdpSender::UdpSender(boost::asio::io_context &ioContext, const int port)
     : m_ioContext(ioContext)
-    , m_socket(m_ioContext, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port))
+    , m_socket(m_ioContext, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), static_cast<boost::asio::ip::port_type>(port)))
     , m_strand(boost::asio::make_strand(m_ioContext))
 {
 }

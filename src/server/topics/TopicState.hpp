@@ -7,8 +7,8 @@
 
 #include <cstdint>
 #include <deque>
-#include <string>
 #include "../../common/Message.hpp"
+#include "../../common/TopicDescriptor.hpp"
 
 /// One data point of a topic: a value and when it was produced.
 struct Sample {
@@ -31,10 +31,10 @@ struct Sample {
 class TopicState {
 public:
     /**
-     * @param topicName  The topic's name.
+     * @param descriptor Everything known about a topic at declaration time
      * @param type       Its stream type (finance, weather, sensor).
      */
-    TopicState(const std::string &topicName, StreamType type);
+    TopicState(const TopicDescriptor &descriptor, const unsigned int topicId);
 
     /// Add a sample, then drop any that fell outside the time window.
     void addSample(double value, std::uint64_t timestampNs);
@@ -45,10 +45,12 @@ public:
     double lastValue() const;   ///< Most recent value (0 if empty).
     StreamType type() const;    ///< The topic's stream type.
     std::string name() const;   ///< The topic's name.
+    unsigned int id() const;    ///< The topic's ID.
     std::uint64_t lastTimestampNs() const;  ///< Timestamp of the most recent sample (0 if empty).
+    TopicDescriptor descriptor() const;
 private:
-    std::string m_topicName;
-    StreamType m_type;
+    const unsigned int m_Id;
+    TopicDescriptor m_topicDescriptor;
     int m_recentSamplesDurationInSec;       ///< Width of the sliding window, in seconds.
     std::deque<Sample> m_recentSamples;     ///< Samples within the window, oldest first.
 };
