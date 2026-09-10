@@ -26,6 +26,7 @@ public:
     void stop();
 private:
     void refreshTopicsDashBoard(const boost::system::error_code& error);
+    void sendTopicDataToClients(const TopicSnapshot &snapshot);
     std::string formatTopicSnapshot(const TopicSnapshot &snapshot) const;
     std::string formatVectorOfDoubles(const std::vector<double> &values, char delimiter) const;
 
@@ -37,6 +38,7 @@ private:
     boost::asio::steady_timer m_dashBoardRefreshTimer;
     std::chrono::seconds m_refreshTime;
     TcpServer m_tcpServer;
+    UdpSender m_udpSender;
 };
 
 

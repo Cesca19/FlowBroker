@@ -48,6 +48,17 @@ void TcpServer::sendMessageToAllClients(const std::string &messageToSend) const
         connection->sendMessage(messageToSend);
 }
 
+std::vector<boost::asio::ip::udp::endpoint> TcpServer::getUdpEndpointsForTopic(const std::string &topicName) const
+{
+    std::vector<boost::asio::ip::udp::endpoint> endpoints;
+
+    if (m_topicSubscriptions.find(topicName) != m_topicSubscriptions.end()) {
+        for (const auto &connection : m_topicSubscriptions.at(topicName))
+            endpoints.push_back(connection->udpEndpoint());
+    }
+    return endpoints;
+}
+
 void TcpServer::addConnection(const std::shared_ptr<TcpConnection> &newConnection)
 {
     m_activeConnections.insert(newConnection);

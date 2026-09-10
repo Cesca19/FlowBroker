@@ -20,6 +20,12 @@ void UdpSender::sendTo(const boost::asio::ip::udp::endpoint &target, std::shared
     });
 }
 
+void UdpSender::sendTo(const std::vector<boost::asio::ip::udp::endpoint> &targets, std::shared_ptr<std::string> dataToSend)
+{
+    for (const auto &target : targets)
+        sendTo(target, dataToSend);
+}
+
 void UdpSender::handleSend(std::shared_ptr<std::string> data, const boost::system::error_code &error, std::size_t)
 {
     if (error)

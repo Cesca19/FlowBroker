@@ -13,6 +13,7 @@ Server::Server(boost::asio::io_context &ioContext, MessageCatalog &catalog, Topi
     , m_dashBoardRefreshTimer(ioContext)
     , m_refreshTime(1)
     , m_tcpServer(ioContext, tcpPort, topicCache)
+    , m_udpSender(ioContext, 0)  // Use port 0 to let the OS choose an available port
 {
 }
 
@@ -52,18 +53,27 @@ void Server::refreshTopicsDashBoard(const boost::system::error_code &error)
 
     std::string messageToSend;
     for (const auto& snapshot : topicSnapshots) {
-        // message arch: TYPE;name;ts;value;average;min;max
-        const std::string topicMessage = formatTopicSnapshot(snapshot);
-        messageToSend += topicMessage;
+        sendTopicDataToClients(snapshot);
     }
-    messageToSend.pop_back(); // remove the last newline character
     // m_tcpServer.sendMessageToAllClients(messageToSend);
     m_dashBoardRefreshTimer.expires_at(m_dashBoardRefreshTimer.expiry() + m_refreshTime);
     m_dashBoardRefreshTimer.async_wait(std::bind(&Server::refreshTopicsDashBoard, this, std::placeholders::_1));
 }
 
+void Server::sendTopicDataToClients(const TopicSnapshot &snapshot)
+{
+    const std::string topicMessage = formatTopicSnapshot(snapshot);
+
+    const std::vector<boost::asio::ip::udp::endpoint> endpoints = m_tcpServer.getUdpEndpointsForTopic(snapshot.topicName);
+    if (!endpoints.empty()) {
+        auto dataToSend = std::make_shared<std::string>(topicMessage);
+        m_udpSender.sendTo(endpoints, dataToSend);
+    }
+}
+
 std::string Server::formatTopicSnapshot(const TopicSnapshot &snapshot) const
 {
+    // message format: "TOPIC;topicName;timestampNs;lastValuesByField;averagesValuesByField;minValuesByField;maxValuesByField\n"
     const std::string topicMessage = "TOPIC;" + snapshot.topicName + ";" + std::to_string(snapshot.timestampNs) + ";" 
                                     + formatVectorOfDoubles(snapshot.lastValuesByField, ':') + ";" 
                                     + formatVectorOfDoubles(snapshot.averagesValuesByField, ':') + ";" 

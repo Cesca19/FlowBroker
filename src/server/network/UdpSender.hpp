@@ -35,6 +35,13 @@ public:
      */
     void sendTo(const boost::asio::ip::udp::endpoint &target, std::shared_ptr<std::string> dataToSend);
 
+    /**
+     * @brief Send a payload to multiple client endpoints.
+     * @param targets     Where to send (built from the clients' IPs + announced UDP ports).
+     * @param dataToSend  The bytes to send; kept alive by shared_ptr until the send completes.
+     */
+    void sendTo(const std::vector<boost::asio::ip::udp::endpoint> &targets, std::shared_ptr<std::string> dataToSend);
+
 private:
     void handleSend(std::shared_ptr<std::string> data, const boost::system::error_code &error, std::size_t bytesTransferred);
 
