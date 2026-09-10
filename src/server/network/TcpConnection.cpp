@@ -96,6 +96,42 @@ std::unordered_set<std::string> TcpConnection::subscribedTopics() const
     return m_subscribedTopics;
 }
 
+void TcpConnection::addAlert(const Alert &alert)
+{
+    m_alerts.push_back(alert);
+}
+
+std::vector<Alert> TcpConnection::checkAlerts(const std::string &topicName, const std::vector<std::string> &schema, const std::vector<double> &values)
+{
+    std::vector<Alert> triggeredAlerts;
+    
+    for (auto &alert : m_alerts) {
+        if (alert.topic != topicName)
+            continue;
+
+        auto it = std::find(schema.begin(), schema.end(), alert.field);
+        auto fieldIndex = (it != schema.end()) ? std::distance(schema.begin(), it) : -1;
+
+        if (fieldIndex == -1 || static_cast<std::size_t>(fieldIndex) >= values.size())
+            continue;
+
+        bool isConditionMeet = evaluateCondition(values[fieldIndex], alert.op, alert.threshold);
+        if (alert.isTriggered) {
+            if (isConditionMeet)
+                continue;
+            alert.isTriggered = false;
+            continue;
+        } else {
+            if (!isConditionMeet)
+                continue;
+            alert.isTriggered = true;
+            alert.lastValue = values[fieldIndex];
+            triggeredAlerts.push_back(alert);
+        }
+    }
+    return triggeredAlerts;
+}
+
 void TcpConnection::readMessage()
 {
     m_socket.async_read_some(boost::asio::buffer(m_messageToRead),
@@ -159,4 +195,19 @@ void TcpConnection::handleRead(const boost::system::error_code &error, size_t by
             m_onMessageReceived(shared_from_this(), line);
     }
     readMessage();
+}
+
+bool TcpConnection::evaluateCondition(double value, const std::string &op, double threshold)
+{
+    if (op == ">")
+        return value > threshold;
+    else if (op == "<")
+        return value < threshold;
+    else if (op == ">=")
+        return value >= threshold;
+    else if (op == "<=")
+        return value <= threshold;
+    else if (op == "==")
+        return value == threshold;
+    return false;
 }

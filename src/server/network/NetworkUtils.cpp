@@ -30,3 +30,14 @@ std::vector<std::string> splitString(const std::string &message, const char deli
     }
     return result;
 }
+
+std::optional<double> parseDouble(std::string_view text)
+{
+    double value = 0.0;
+    const char *begin = text.data();
+    const char *end = text.data() + text.size();
+    auto [ptr, ec] = std::from_chars(begin, end, value);
+    if (ec != std::errc() || ptr != end)
+        return std::nullopt;
+    return value;
+}

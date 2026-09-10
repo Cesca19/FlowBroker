@@ -9,6 +9,7 @@
 #include <memory>
 #include <unordered_set>
 #include <boost/asio.hpp>
+#include "../../common/Alert.hpp"
 
 /// Session state: CONNECTED = TCP up but no valid HELLO yet, READY = HELLO done.
 enum class SessionState { Connected, Ready };
@@ -65,17 +66,35 @@ public:
     void subscribeToTopic(const std::string &topicName);
     void unsubscribeFromTopic(const std::string &topicName);
     std::unordered_set<std::string> subscribedTopics() const;
+    void addAlert(const Alert &alert);
+    
+    /**
+     * @brief Check this client's alerts for one topic against its current values.
+     *
+     * Updates each alert's triggered state internally, and returns only the alerts
+     * that just crossed their threshold on this check (a firing alert stays silent
+     * until the condition goes false again and comes back).
+     *
+     * @param topicName  The topic whose values just changed.
+     * @param schema     Ordered field names, to locate the alert's field in values.
+     * @param values     Current value of each field, aligned with the schema.
+     * @return The alerts that fired on this check (empty if none).
+     */
+    std::vector<Alert> checkAlerts(const std::string &topicName, const std::vector<std::string> &schema,
+                               const std::vector<double> &values);
 private:
     void readMessage();
     void sendNextMessage();
     TcpConnection(boost::asio::io_context &ioContext);
     void handleWrite(const boost::system::error_code &error, size_t);
     void handleRead(const boost::system::error_code &error, size_t bytes_transferred);
+    bool evaluateCondition(double value, const std::string &op, double threshold);
 
     int m_sessionId;
     std::uint16_t m_udpPort;
     SessionState m_sessionState;
     std::string m_pendingMessage;
+    std::vector<Alert> m_alerts;
     boost::asio::ip::udp::endpoint m_udpEndpoint;
     std::unordered_set<std::string> m_subscribedTopics;
     std::queue<std::string> m_messagesToSend;

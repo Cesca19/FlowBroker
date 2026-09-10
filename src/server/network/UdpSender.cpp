@@ -26,7 +26,7 @@ void UdpSender::sendTo(const std::vector<boost::asio::ip::udp::endpoint> &target
         sendTo(target, dataToSend);
 }
 
-void UdpSender::handleSend(std::shared_ptr<std::string> data, const boost::system::error_code &error, std::size_t)
+void UdpSender::handleSend(std::shared_ptr<std::string>, const boost::system::error_code &error, std::size_t)
 {
     if (error)
         std::cerr << "UDP send failed: " << error.message() << std::endl;

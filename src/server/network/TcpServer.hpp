@@ -34,6 +34,7 @@ public:
     void handleAccept(const std::shared_ptr<TcpConnection> &newConnection, const boost::system::error_code &error);
     void sendMessageToAllClients(const std::string &messageToSend) const;
     std::vector<boost::asio::ip::udp::endpoint> getUdpEndpointsForTopic(const std::string &topicName) const;
+    void checkAlertsStatusByTopic(TopicSnapshot &topicSnapshot);
 private:
     void addConnection(const std::shared_ptr<TcpConnection> &newConnection);
     void removeConnection(const std::shared_ptr<TcpConnection> &connectionToRemove);
@@ -57,7 +58,8 @@ private:
         StreamType type, const std::vector<std::string> &schema);
 
     int m_port;
-    int m_nextSessionId;
+    unsigned int m_nextAlertId;
+    unsigned int m_nextSessionId;
     TopicCache &m_topicCache;
     boost::asio::io_context& m_ioContext;
     boost::asio::ip::tcp::acceptor m_acceptor;

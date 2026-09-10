@@ -16,6 +16,6 @@
 
 std::optional<std::uint16_t> parsePort(const std::string_view text);
 std::vector<std::string> splitString(const std::string &message, char delimiter);
-
+std::optional<double> parseDouble(std::string_view text);
 
 #endif //FLOWBROKER_NETWORKUTILS_HPP

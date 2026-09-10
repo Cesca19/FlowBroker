@@ -2,11 +2,12 @@
 // Created by fran on 27/07/2026.
 //
 
-#include "TcpServer.hpp"
 #include <iostream>
+#include "TcpServer.hpp"
 
 TcpServer::TcpServer(boost::asio::io_context &ioContext, const int port, TopicCache &topicCache)
     : m_port(port)
+    , m_nextAlertId(1)
     , m_nextSessionId(1)
     , m_topicCache(topicCache)
     , m_ioContext(ioContext)
@@ -57,6 +58,21 @@ std::vector<boost::asio::ip::udp::endpoint> TcpServer::getUdpEndpointsForTopic(c
             endpoints.push_back(connection->udpEndpoint());
     }
     return endpoints;
+}
+
+void TcpServer::checkAlertsStatusByTopic(TopicSnapshot &topicSnapshot)
+{
+    for (const auto &connection : m_activeConnections) {
+        const std::vector<Alert> triggeredAlerts = connection->checkAlerts(topicSnapshot.topicName, 
+            m_topicCache.topicSchema(topicSnapshot.topicName), topicSnapshot.lastValuesByField);
+        for (const auto &alert : triggeredAlerts) {
+            // 300 ALERT id=<int> <topic> <field> <value> <op> <threshold>
+            std::string alertMessage = "300 ALERT id=" + std::to_string(alert.id) + " " + 
+                                alert.topic + " " + alert.field + " " + std::to_string(alert.lastValue) + " " + 
+                                alert.op + " " + std::to_string(alert.threshold);
+            connection->sendMessage(alertMessage);
+        }
+    }
 }
 
 void TcpServer::addConnection(const std::shared_ptr<TcpConnection> &newConnection)
@@ -203,6 +219,43 @@ void TcpServer::onUnsubscriptionRequested(const std::shared_ptr<TcpConnection> &
 void TcpServer::onAlertRequested(const std::shared_ptr<TcpConnection> &connection,
     std::vector<std::string> alertMessageParts)
 {
+    if (alertMessageParts.size() != 5) {
+        connection->sendMessage("400 BAD_REQUEST - Invalid alert message");
+        return;
+    }
+
+    // ALERT AAPL price > 500.00
+    const std::string topicName = alertMessageParts[1];
+    const std::string fieldName = alertMessageParts[2];
+    const std::string operatorStr = alertMessageParts[3];
+    const std::string thresholdStr = alertMessageParts[4];
+
+    if (!m_topicCache.hasTopic(topicName)) {
+        connection->sendMessage("404 UNKNOWN_TOPIC " + topicName);
+        return;
+    }
+
+    if (m_topicCache.topicSchema(topicName).empty() 
+    || std::find(m_topicCache.topicSchema(topicName).begin(), m_topicCache.topicSchema(topicName).end(), fieldName) 
+        == m_topicCache.topicSchema(topicName).end()) {
+        connection->sendMessage("400 BAD_REQUEST - Unknown field " + fieldName + " in topic " + topicName);
+        return;
+    }
+
+    if (operatorStr != ">" && operatorStr != "<" && operatorStr != ">=" && operatorStr != "<=" && operatorStr != "==") {
+        connection->sendMessage("400 BAD_REQUEST - Invalid operator " + operatorStr);
+        return;
+    }
+
+    const std::optional<double> threshold = parseDouble(thresholdStr);
+    if (!threshold) {
+        connection->sendMessage("400 BAD_REQUEST - Invalid threshold " + thresholdStr);
+        return;
+    }
+
+    Alert alert = {m_nextAlertId++, topicName, fieldName, operatorStr, threshold.value()};
+    connection->addAlert(alert);
+    connection->sendMessage("203 ALERT_SET id=" +  std::to_string(alert.id));
 }
 
 void TcpServer::onByeRequested(const std::shared_ptr<TcpConnection> &connection)
