@@ -72,6 +72,7 @@ bool TopicCache::hasTopic(const std::string &topicName) const
 
 unsigned int TopicCache::topicId(const std::string &topicName) const
 {
+    std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
     auto it = m_topicStatesCache.find(topicName);
     
     if (it == m_topicStatesCache.end())
@@ -81,8 +82,20 @@ unsigned int TopicCache::topicId(const std::string &topicName) const
 
 std::vector<std::string> TopicCache::topicSchema(const std::string &topicName) const
 {
+    std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
     auto it = m_topicStatesCache.find(topicName);
+
     if (it == m_topicStatesCache.end())
         return std::vector<std::string>();
     return it->second.descriptor().schema;
+}
+
+StreamType TopicCache::topicType(const std::string &topicName) const
+{
+    std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
+    auto it = m_topicStatesCache.find(topicName);
+
+    if (it == m_topicStatesCache.end())
+        return StreamType::UNKNOWN;
+    return it->second.descriptor().type;
 }

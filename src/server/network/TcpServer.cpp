@@ -167,12 +167,26 @@ void TcpServer::onSubscriptionRequested(const std::shared_ptr<TcpConnection> &co
 
     unsigned int id = m_topicCache.topicId(topicName);
     std::vector<std::string> schema = m_topicCache.topicSchema(topicName);
-    connection->sendMessage("201 SUBSCRIBED " + formatSubscribedTopicInfo(topicName, id, schema));
+    StreamType type = m_topicCache.topicType(topicName);
+    connection->sendMessage("201 SUBSCRIBED " + formatSubscribedTopicInfo(topicName, id, type, schema));
 }
 
 void TcpServer::onUnsubscriptionRequested(const std::shared_ptr<TcpConnection> &connection,
     std::vector<std::string> unsubMessageParts)
 {
+    if (unsubMessageParts.size() != 2) {
+        connection->sendMessage("400 BAD_REQUEST - Invalid unsubscription message");
+        return;
+    }
+
+    const std::string &topicName = unsubMessageParts[1];
+
+    if (!m_topicCache.hasTopic(topicName)) {
+        connection->sendMessage("404 UNKNOWN_TOPIC " + topicName);
+        return;
+    }
+    unsubscribeConnectionFromTopic(connection, topicName);
+    connection->sendMessage("202 UNSUBSCRIBED " + topicName);
 }
 
 void TcpServer::onAlertRequested(const std::shared_ptr<TcpConnection> &connection,
@@ -193,6 +207,8 @@ std::string TcpServer::streamTypeToString(const StreamType type)
             return "WEATHER";
         case StreamType::SENSOR:
             return "SENSOR";
+        case StreamType::UNKNOWN:
+            return "UNKNOWN";
     }
     return "UNKNOWN";
 }
@@ -224,13 +240,16 @@ void TcpServer::unsubscribeConnectionFromAllTopics(const std::shared_ptr<TcpConn
         unsubscribeConnectionFromTopic(connection, topic);
 }
 
-std::string TcpServer::formatSubscribedTopicInfo(const std::string &topicName, unsigned int id, const std::vector<std::string> &schema)
+std::string TcpServer::formatSubscribedTopicInfo(const std::string &topicName, unsigned int id, 
+    StreamType type, const std::vector<std::string> &schema)
 {
-    std::string message = "topic_name=" + topicName + " topic_id=" + std::to_string(id) + " type=[";
+    std::string message = "topic_name=" + topicName + " topic_id=" + std::to_string(id) + 
+        " type=" + streamTypeToString(type) + " fields=[";
 
     for (const auto &field: schema)
         message += field + ",";
-    message.pop_back();
+    if (!schema.empty())
+        message.pop_back();
     message += "]";
     return message;
 }

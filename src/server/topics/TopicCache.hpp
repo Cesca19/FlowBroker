@@ -45,6 +45,7 @@ public:
     bool hasTopic(const std::string &topicName) const;
     unsigned int topicId(const std::string &topicName) const;
     std::vector<std::string> topicSchema(const std::string &topicName) const;
+    StreamType topicType(const std::string &topicName) const;
 private:
     int m_nextTopicId;
     std::unordered_map<std::string, TopicState> m_topicStatesCache;

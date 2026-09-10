@@ -14,6 +14,7 @@ enum class StreamType : std::uint16_t {
     FINANCE,
     WEATHER,
     SENSOR,
+    UNKNOWN
 };
 
 // The common in-memory envelope. Every data source produces this, whatever its origin

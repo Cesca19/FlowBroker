@@ -21,7 +21,7 @@ server to the client only. The client never sends anything over UDP.
 
 <br>
 
-## 2. Protocols notation
+## 2. Protocol notation
 The syntax of the control messages is described with **ABNF** (Augmented
 Backus-Naur Form), the same notation used by internet standards such as HTTP and
 FTP. Everything used in this document is listed here.
@@ -192,7 +192,7 @@ Defined codes:
 ```
 2xx  Success
   200  OK                 generic acknowledgement of an accepted command
-  201  SUBSCRIBED         subscription established; carries topic_name topic_id, type, fields
+  201  SUBSCRIBED         subscription established; carries topic_name, topic_id, type, fields
   202  UNSUBSCRIBED       subscription cancelled
   203  ALERT_SET          alert registered; carries its id
   210  TOPICS             list of available topics; carries name:type pairs

@@ -52,7 +52,8 @@ private:
     void subscribeConnectionToTopic(const std::shared_ptr<TcpConnection> &connection, const std::string &topicName);
     void unsubscribeConnectionFromTopic(const std::shared_ptr<TcpConnection> &connection, const std::string &topicName);
     void unsubscribeConnectionFromAllTopics(const std::shared_ptr<TcpConnection> &connection);
-    static std::string formatSubscribedTopicInfo(const std::string &topicName, unsigned int id, const std::vector<std::string> &schema);
+    static std::string formatSubscribedTopicInfo(const std::string &topicName, unsigned int id, 
+        StreamType type, const std::vector<std::string> &schema);
 
     int m_port;
     int m_nextSessionId;

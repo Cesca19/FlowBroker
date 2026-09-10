@@ -5,8 +5,8 @@
 #include "TopicState.hpp"
 
 TopicState::TopicState(const TopicDescriptor &descriptor, const unsigned int topicId)
-    : m_topicDescriptor(descriptor)
-    , m_Id(topicId)
+    : m_Id(topicId)
+    , m_topicDescriptor(descriptor)
     , m_recentSamplesDurationInSec(5)
 {
 }
