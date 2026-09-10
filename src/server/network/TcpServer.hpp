@@ -34,7 +34,7 @@ public:
     void handleAccept(const std::shared_ptr<TcpConnection> &newConnection, const boost::system::error_code &error);
     void sendMessageToAllClients(const std::string &messageToSend) const;
     std::vector<boost::asio::ip::udp::endpoint> getUdpEndpointsForTopic(const std::string &topicName) const;
-    void checkAlertsStatusByTopic(TopicSnapshot &topicSnapshot);
+    void checkAlertsStatusByTopic(const TopicSnapshot &topicSnapshot);
 private:
     void addConnection(const std::shared_ptr<TcpConnection> &newConnection);
     void removeConnection(const std::shared_ptr<TcpConnection> &connectionToRemove);

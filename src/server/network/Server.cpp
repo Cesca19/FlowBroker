@@ -54,7 +54,7 @@ void Server::refreshTopicsDashBoard(const boost::system::error_code &error)
     std::string messageToSend;
     for (const auto& snapshot : topicSnapshots) {
         sendTopicDataToClients(snapshot);
-        
+        m_tcpServer.checkAlertsStatusByTopic(snapshot);
     }
     // m_tcpServer.sendMessageToAllClients(messageToSend);
     m_dashBoardRefreshTimer.expires_at(m_dashBoardRefreshTimer.expiry() + m_refreshTime);

@@ -60,7 +60,7 @@ std::vector<boost::asio::ip::udp::endpoint> TcpServer::getUdpEndpointsForTopic(c
     return endpoints;
 }
 
-void TcpServer::checkAlertsStatusByTopic(TopicSnapshot &topicSnapshot)
+void TcpServer::checkAlertsStatusByTopic(const TopicSnapshot &topicSnapshot)
 {
     for (const auto &connection : m_activeConnections) {
         const std::vector<Alert> triggeredAlerts = connection->checkAlerts(topicSnapshot.topicName, 
@@ -235,9 +235,9 @@ void TcpServer::onAlertRequested(const std::shared_ptr<TcpConnection> &connectio
         return;
     }
 
-    if (m_topicCache.topicSchema(topicName).empty() 
-    || std::find(m_topicCache.topicSchema(topicName).begin(), m_topicCache.topicSchema(topicName).end(), fieldName) 
-        == m_topicCache.topicSchema(topicName).end()) {
+    const std::vector<std::string> schema = m_topicCache.topicSchema(topicName);
+    if (schema.empty() 
+    || std::find(schema.begin(), schema.end(), fieldName) == schema.end()) {
         connection->sendMessage("400 BAD_REQUEST - Unknown field " + fieldName + " in topic " + topicName);
         return;
     }
