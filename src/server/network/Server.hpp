@@ -26,6 +26,8 @@ public:
     void stop();
 private:
     void refreshTopicsDashBoard(const boost::system::error_code& error);
+    std::string formatTopicSnapshot(const TopicSnapshot &snapshot) const;
+    std::string formatVectorOfDoubles(const std::vector<double> &values, char delimiter) const;
 
     boost::asio::io_context &m_ioContext;
     boost::asio::signal_set m_signals;

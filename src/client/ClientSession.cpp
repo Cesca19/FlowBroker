@@ -27,7 +27,7 @@ void ClientSession::disconnectTcpClient() const
 
 void ClientSession::handleTcpServerMessage(const QString &message)
 {
-    const QStringList parts = message.split(':');
+    const QStringList parts = message.split(';');
 
     if (parts.isEmpty())
         return;

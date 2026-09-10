@@ -3,60 +3,101 @@
 //
 
 #include "TopicState.hpp"
+#include <iostream>
 
 TopicState::TopicState(const TopicDescriptor &descriptor, const unsigned int topicId)
     : m_Id(topicId)
     , m_topicDescriptor(descriptor)
     , m_recentSamplesDurationInSec(5)
+    , m_recentSamplesByField(descriptor.schema.size())
 {
 }
 
-void TopicState::addSample(const double value, const std::uint64_t timestampNs)
+void TopicState::addSample(const std::vector<double> &values, const std::uint64_t timestampNs)
 {
-    m_recentSamples.push_back({value, timestampNs});
-    const std::uint64_t maxDurationNs = static_cast<std::uint64_t>(m_recentSamplesDurationInSec) * 1'000'000'000ULL;
+    if (m_recentSamplesByField.size() != values.size()) {
+        std::cerr << "TopicState: Invalid number of values in topic " + m_topicDescriptor.name 
+        + " expected " + std::to_string(m_topicDescriptor.schema.size()) + " value(s)" 
+        << std::endl;
+        return;
+    }
 
-    while (!m_recentSamples.empty() && m_recentSamples.front().timestampNs + maxDurationNs < timestampNs)
-        m_recentSamples.pop_front();
+    for (std::size_t i = 0; i < m_recentSamplesByField.size() ; i++) {
+        auto &currentFieldSamples = m_recentSamplesByField[i];
+        const std::uint64_t maxDurationNs = static_cast<std::uint64_t>(m_recentSamplesDurationInSec) * 1'000'000'000ULL;
+
+        currentFieldSamples.push_back({values[i], timestampNs});
+        while (!currentFieldSamples.empty() && currentFieldSamples.front().timestampNs + maxDurationNs < timestampNs)
+            currentFieldSamples.pop_front();
+    }
 }
 
-double TopicState::min() const
+std::vector<double> TopicState::min() const
 {
-    if (m_recentSamples.empty())
-        return 0.0;
-    double min = m_recentSamples.front().value;
-    for (const auto &[value, timestampNs] : m_recentSamples)
-        if (value < min)
-            min = value;
-    return min;
+    std::vector<double> minValues;
+    for (std::size_t i = 0; i < m_recentSamplesByField.size() ; i++) {
+        auto &currentFieldSamples = m_recentSamplesByField[i];
+
+        if (currentFieldSamples.empty()) {
+            minValues.push_back(0);
+            continue;
+        }
+        double min = currentFieldSamples.front().value;
+        for (const auto &[value, timestampNs] : currentFieldSamples)
+            if (value < min)
+                min = value;
+        minValues.push_back(min);
+    }
+    return minValues;
 }
 
-double TopicState::max() const
+std::vector<double> TopicState::max() const
 {
-    if (m_recentSamples.empty())
-        return 0.0;
-    double max = m_recentSamples.front().value;
-    for (const auto &[value, timestampNs] : m_recentSamples)
-        if (value > max)
-            max = value;
-    return max;
+    std::vector<double> maxValues;
+    for (std::size_t i = 0; i < m_recentSamplesByField.size() ; i++) {
+        auto &currentFieldSamples = m_recentSamplesByField[i];
+        if (currentFieldSamples.empty()) {
+            maxValues.push_back(0);
+            continue;
+        }
+        double max = currentFieldSamples.front().value;
+        for (const auto &[value, timestampNs] : currentFieldSamples)
+            if (value > max)
+                max = value;
+        maxValues.push_back(max);
+    }
+    return maxValues;
 }
 
-double TopicState::average() const
+std::vector<double> TopicState::average() const
 {
-    if (m_recentSamples.empty())
-        return 0.0;
-    double sum = 0.0;
-    for (const auto&[value, timestampNs] : m_recentSamples)
-        sum += value;
-    return sum / m_recentSamples.size();
+    std::vector<double> averageValues;
+    for (std::size_t i = 0; i < m_recentSamplesByField.size() ; i++) {
+        auto &currentFieldSamples = m_recentSamplesByField[i];
+        if (currentFieldSamples.empty()) {
+            averageValues.push_back(0);
+            continue;
+        }
+        double sum = 0.0;
+        for (const auto &[value, timestampNs] : currentFieldSamples)
+            sum += value;
+        averageValues.push_back(sum / currentFieldSamples.size());
+    }
+    return averageValues;
 }
 
-double TopicState::lastValue() const
+std::vector<double> TopicState::lastValue() const
 {
-    if (m_recentSamples.empty())
-        return 0.0;
-    return m_recentSamples.back().value;
+    std::vector<double> lastValues;
+    for (std::size_t i = 0; i < m_recentSamplesByField.size() ; i++) {
+        auto &currentFieldSamples = m_recentSamplesByField[i];
+        if (currentFieldSamples.empty()) {
+            lastValues.push_back(0);
+            continue;
+        }
+        lastValues.push_back(currentFieldSamples.back().value);
+    }
+    return lastValues;
 }
 
 StreamType TopicState::type() const
@@ -76,9 +117,9 @@ unsigned int TopicState::id() const
 
 std::uint64_t TopicState::lastTimestampNs() const
 {
-    if (m_recentSamples.empty())
+    if (m_recentSamplesByField.empty())
         return 0;
-    return m_recentSamples.back().timestampNs;
+    return m_recentSamplesByField[0].empty() ? 0 : m_recentSamplesByField[0].back().timestampNs;
 }
 
 TopicDescriptor TopicState::descriptor() const

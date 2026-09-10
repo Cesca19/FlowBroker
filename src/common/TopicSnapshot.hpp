@@ -11,10 +11,10 @@
 struct TopicSnapshot {
     std::string topicName;
     std::uint64_t timestampNs;
-    double lastValue;
-    double average;
-    double min;
-    double max;
+    std::vector<double> lastValuesByField;
+    std::vector<double> averagesValuesByField;
+    std::vector<double> minValuesByField;
+    std::vector<double> maxValuesByField;
 };
 
 #endif //FLOWBROKER_TOPICSNAPSHOT_HPP

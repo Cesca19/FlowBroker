@@ -196,6 +196,7 @@ void TcpServer::onAlertRequested(const std::shared_ptr<TcpConnection> &connectio
 
 void TcpServer::onByeRequested(const std::shared_ptr<TcpConnection> &connection)
 {
+    connection->sendMessage("200 OK");
 }
 
 std::string TcpServer::streamTypeToString(const StreamType type)

@@ -17,7 +17,7 @@ void TopicCache::addTopic(const TopicDescriptor &topicDescriptor)
         m_topicStatesCache.emplace(topicDescriptor.name, TopicState(topicDescriptor, m_nextTopicId++));
 }
 
-void TopicCache::addTopicSample(const std::string &topicName, const double value, const std::uint64_t timestampNs) {
+void TopicCache::addTopicSample(const std::string &topicName, const std::vector<double> &values, const std::uint64_t timestampNs) {
     std::lock_guard<std::mutex> lockGuard(m_topicStateCacheMutex);
     auto it = m_topicStatesCache.find(topicName);
 
@@ -25,7 +25,7 @@ void TopicCache::addTopicSample(const std::string &topicName, const double value
         std::cerr << "TopicCache: undeclared topic " << topicName << std::endl;
         return;
     }
-    it->second.addSample(value, timestampNs);
+    it->second.addSample(values, timestampNs);
 }
 
 TopicSnapshot TopicCache::getTopicSnapshot(const std::string &topicName) const

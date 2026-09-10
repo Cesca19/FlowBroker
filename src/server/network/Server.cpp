@@ -51,14 +51,35 @@ void Server::refreshTopicsDashBoard(const boost::system::error_code &error)
     const std::vector<TopicSnapshot> topicSnapshots = m_topicCache.getAllTopicsSnapshot();
 
     std::string messageToSend;
-    for (const auto&[topicName, timeStampNs, lastValue, average, min, max] : topicSnapshots) {
+    for (const auto& snapshot : topicSnapshots) {
         // message arch: TYPE;name;ts;value;average;min;max
-        const std::string topicMessage = "TOPIC:" + topicName + ":" + std::to_string(timeStampNs) + ":" + std::to_string(lastValue) + ":" +
-            std::to_string(average) + ":" + std::to_string(min) + ":" + std::to_string(max) + "\n";
-        // std::cout << topicMessage;
+        const std::string topicMessage = formatTopicSnapshot(snapshot);
         messageToSend += topicMessage;
     }
+    messageToSend.pop_back(); // remove the last newline character
     // m_tcpServer.sendMessageToAllClients(messageToSend);
     m_dashBoardRefreshTimer.expires_at(m_dashBoardRefreshTimer.expiry() + m_refreshTime);
     m_dashBoardRefreshTimer.async_wait(std::bind(&Server::refreshTopicsDashBoard, this, std::placeholders::_1));
+}
+
+std::string Server::formatTopicSnapshot(const TopicSnapshot &snapshot) const
+{
+    const std::string topicMessage = "TOPIC;" + snapshot.topicName + ";" + std::to_string(snapshot.timestampNs) + ";" 
+                                    + formatVectorOfDoubles(snapshot.lastValuesByField, ':') + ";" 
+                                    + formatVectorOfDoubles(snapshot.averagesValuesByField, ':') + ";" 
+                                    + formatVectorOfDoubles(snapshot.minValuesByField, ':') + ";"
+                                    + formatVectorOfDoubles(snapshot.maxValuesByField, ':') + "\n";
+    return topicMessage;
+}
+
+std::string Server::formatVectorOfDoubles(const std::vector<double> &values, char delimiter) const
+{
+    std::string formattedString;
+    for (size_t i = 0; i < values.size(); ++i) {
+        if (i > 0) {
+            formattedString += delimiter;
+        }
+        formattedString += std::to_string(values[i]);
+    }
+    return formattedString;
 }

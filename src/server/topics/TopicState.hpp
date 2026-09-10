@@ -37,12 +37,12 @@ public:
     TopicState(const TopicDescriptor &descriptor, const unsigned int topicId);
 
     /// Add a sample, then drop any that fell outside the time window.
-    void addSample(double value, std::uint64_t timestampNs);
+    void addSample(const std::vector<double> &values, std::uint64_t timestampNs);
     
-    double min() const;         ///< Smallest value in the window (0 if empty).
-    double max() const;         ///< Largest value in the window (0 if empty).
-    double average() const;     ///< Mean of the values in the window (0 if empty).
-    double lastValue() const;   ///< Most recent value (0 if empty).
+    std::vector<double> min() const;         ///< Smallest values in the window ({0} if empty).
+    std::vector<double> max() const;         ///< Largest values in the window ({0} if empty).
+    std::vector<double> average() const;     ///< Mean of the values in the window ({0} if empty).
+    std::vector<double> lastValue() const;   ///< Most recent values ({0} if empty).
     StreamType type() const;    ///< The topic's stream type.
     std::string name() const;   ///< The topic's name.
     unsigned int id() const;    ///< The topic's ID.
@@ -52,7 +52,8 @@ private:
     const unsigned int m_Id;
     TopicDescriptor m_topicDescriptor;
     int m_recentSamplesDurationInSec;       ///< Width of the sliding window, in seconds.
-    std::deque<Sample> m_recentSamples;     ///< Samples within the window, oldest first.
+    std::vector<std::deque<Sample>> m_recentSamplesByField;  ///< Samples within the window, oldest first, one deque per field.
+    // std::deque<Sample> m_recentSamples;     ///< Samples within the window, oldest first.
 };
 
 

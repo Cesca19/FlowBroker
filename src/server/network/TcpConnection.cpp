@@ -122,7 +122,7 @@ TcpConnection::TcpConnection(boost::asio::io_context &ioContext)
 {
 }
 
-void TcpConnection::handleWrite(const boost::system::error_code &error, size_t bytes_transferred)
+void TcpConnection::handleWrite(const boost::system::error_code &error, size_t)
 {
     if (error && m_onError) {
         m_onError(shared_from_this(), error);

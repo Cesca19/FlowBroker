@@ -69,7 +69,7 @@ private:
     void readMessage();
     void sendNextMessage();
     TcpConnection(boost::asio::io_context &ioContext);
-    void handleWrite(const boost::system::error_code &error, size_t bytes_transferred);
+    void handleWrite(const boost::system::error_code &error, size_t);
     void handleRead(const boost::system::error_code &error, size_t bytes_transferred);
 
     int m_sessionId;

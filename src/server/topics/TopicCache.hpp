@@ -31,7 +31,7 @@ public:
     void addTopic(const TopicDescriptor &topicDescriptor);
 
     /// Record a sample for a topic, creating the topic if it is seen first here.
-    void addTopicSample(const std::string &topicName, double value, const std::uint64_t timestampNs);
+    void addTopicSample(const std::string &topicName, const std::vector<double> &values, const std::uint64_t timestampNs);
     
     /// Snapshot of one topic's current state (empty snapshot if unknown).
     TopicSnapshot getTopicSnapshot(const std::string &topicName) const;

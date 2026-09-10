@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.28)
 project(FlowBroker VERSION 0.0.1 LANGUAGES CXX)
 
+if (WIN32)
+    add_compile_definitions(_WIN32_WINNT=0x0A00)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
@@ -52,7 +56,7 @@ endif()
 #  (via Conan) ---
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/generators")
 find_package(Qt6 REQUIRED COMPONENTS Widgets Network Charts OpenGLWidgets)
-find_package(Boost REQUIRED)
+find_package(Boost CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 
 # --- Output directories ---
