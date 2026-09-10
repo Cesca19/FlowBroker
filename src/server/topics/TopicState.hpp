@@ -10,9 +10,9 @@
 #include "../../common/Message.hpp"
 #include "../../common/TopicDescriptor.hpp"
 
-/// One data point of a topic: a value and when it was produced.
-struct Sample {
-    double value;
+/// One reading of a topic: a vector of values (one per field) and when it was produced.
+struct Reading {
+    std::vector<double> values;   // one per field, aligned with the schema
     std::uint64_t timestampNs;
 };
 
@@ -39,10 +39,10 @@ public:
     /// Add a sample, then drop any that fell outside the time window.
     void addSample(const std::vector<double> &values, std::uint64_t timestampNs);
     
-    std::vector<double> min() const;         ///< Smallest values in the window ({0} if empty).
-    std::vector<double> max() const;         ///< Largest values in the window ({0} if empty).
-    std::vector<double> average() const;     ///< Mean of the values in the window ({0} if empty).
-    std::vector<double> lastValue() const;   ///< Most recent values ({0} if empty).
+    std::vector<double> min() const;         ///< Smallest values in the window ({} if empty).
+    std::vector<double> max() const;         ///< Largest values in the window ({} if empty).
+    std::vector<double> average() const;     ///< Mean of the values in the window ({} if empty).
+    std::vector<double> lastValue() const;   ///< Most recent values ({} if empty).
     StreamType type() const;    ///< The topic's stream type.
     std::string name() const;   ///< The topic's name.
     unsigned int id() const;    ///< The topic's ID.
@@ -51,9 +51,8 @@ public:
 private:
     const unsigned int m_Id;
     TopicDescriptor m_topicDescriptor;
-    int m_recentSamplesDurationInSec;       ///< Width of the sliding window, in seconds.
-    std::vector<std::deque<Sample>> m_recentSamplesByField;  ///< Samples within the window, oldest first, one deque per field.
-    // std::deque<Sample> m_recentSamples;     ///< Samples within the window, oldest first.
+    std::uint64_t m_recentSamplesDurationInSec;       ///< Width of the sliding window, in seconds.
+    std::deque<Reading> m_recentReadings;
 };
 
 
