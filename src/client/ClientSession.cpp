@@ -2,6 +2,7 @@
 // Created by fran on 02/09/2026.
 //
 
+#include <iostream>
 #include "ClientSession.hpp"
 
 ClientSession::ClientSession(QObject *parent)
@@ -27,14 +28,47 @@ void ClientSession::disconnectTcpClient() const
 
 void ClientSession::handleTcpServerMessage(const QString &message)
 {
-    const QStringList parts = message.split(';');
+    const QStringList parts = message.split(' ');
 
     if (parts.isEmpty())
         return;
-    const QString type = parts[0];
-    if (type == "TOPIC")
-        onNewTopicSnapshotReceived(parts);
-    // std::cout << "-" << message.toStdString() << "-" << std::endl;
+    if (parts[0] == "200") {
+        // OK message, after hello or bye
+        return;
+    }
+    if (parts[0] == "201") {
+        // 201 SUBSCRIBED topic_name=<name> topic_id=<int> type=<TYPE> fields=[<name>,<name>,...]
+        return;
+    }
+    if (parts[0] == "202") {
+        // 202 UNSUBSCRIBED ...
+        return;
+    }
+    if (parts[0] == "203") {
+        // 203 ALERT_SET id=<int>
+        return;
+    }
+    if (parts[0] == "210") {
+        // 210 TOPICS <name>:<TYPE> <name>:<TYPE> ...
+        return;
+    }
+    if (parts[0] == "300") {
+        // 300 ALERT id=<int> <topic> <field> <value> <op> <threshold>
+        return;
+    }
+    if (parts[0] == "400" || parts[0] == "404"  || parts[0] == "425") {
+        // client error messsages
+        return;
+    }
+    std::cout << "ClientSession - Unknown message: " << message.toStdString() << std::endl;
+    // const QStringList parts = message.split(';');
+
+    // if (parts.isEmpty())
+    //     return;
+    // const QString type = parts[0];
+    // if (type == "TOPIC")
+    //     onNewTopicSnapshotReceived(parts);
+    // // std::cout << "-" << message.toStdString() << "-" << std::endl;
 }
 
 void ClientSession::sendHello(const int m_udpPort) const

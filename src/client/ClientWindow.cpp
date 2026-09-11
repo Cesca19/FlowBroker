@@ -60,6 +60,7 @@ void ClientWindow::onConnectButtonClicked()
 {
     if (m_tcpConnectionState == ConnectionState::Connected) {
         m_clientSession->disconnectTcpClient();
+        // close the udp socket
         return;
     }
 
@@ -82,6 +83,7 @@ void ClientWindow::onConnectButtonClicked()
     m_host = *host;
     m_tcpPort = *tcpPort;
     m_udpPort = *udpPort;
+    // connect the udp socket : on fail return : on success connect the tcp socket then send Hello
     m_clientSession->connectTcpClient(m_host, m_tcpPort);
 }
 
