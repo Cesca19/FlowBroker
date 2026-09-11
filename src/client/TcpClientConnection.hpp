@@ -10,6 +10,14 @@
 #include <QApplication>
 #include "UIUtils.hpp"
 
+/**
+ * @class TcpClientConnection
+ * @brief Owns the TCP control socket and turns its byte stream into lines.
+ *
+ * This is the transport layer of the client.
+ * It knows nothing about the protocol itself: it opens and closes the socket,
+ * accumulates incoming bytes until a complete line is available, and emits that line.
+ */
 class TcpClientConnection  : public QObject {
     Q_OBJECT
 public:
@@ -24,7 +32,9 @@ signals:
     void messageReceived(const QString &messageContent);
 private slots:
     void onConnected();
-    void onDisconnected() const;
+    void onDisconnected();
+
+    /// Append the new bytes to the buffer and emit every complete line it holds.
     void onMessageReceived();
     void onConnectionError(QAbstractSocket::SocketError socketError);
     void onSocketStateChanged(QAbstractSocket::SocketState socketState);

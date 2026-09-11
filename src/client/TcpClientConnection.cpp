@@ -18,11 +18,11 @@ void TcpClientConnection::initConnection()
     m_tcpSocket = new QTcpSocket(this);
     m_socketState = m_tcpSocket->state();
 
-    connect(m_tcpSocket, SIGNAL(readyRead()), this, SLOT(onMessageReceived()));
-    connect(m_tcpSocket, SIGNAL(connected()), this, SLOT(onConnected()));
-    connect(m_tcpSocket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
-    connect(m_tcpSocket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)), this , SLOT(onConnectionError(QAbstractSocket::SocketError)));
-    connect(m_tcpSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(onSocketStateChanged(QAbstractSocket::SocketState)));
+    connect(m_tcpSocket, &QTcpSocket::readyRead, this, &TcpClientConnection::onMessageReceived);
+    connect(m_tcpSocket, &QTcpSocket::connected, this, &TcpClientConnection::onConnected);
+    connect(m_tcpSocket, &QTcpSocket::disconnected, this, &TcpClientConnection::onDisconnected);
+    connect(m_tcpSocket, &QTcpSocket::errorOccurred, this, &TcpClientConnection::onConnectionError);
+    connect(m_tcpSocket, &QTcpSocket::stateChanged, this, &TcpClientConnection::onSocketStateChanged);
 }
 
 void TcpClientConnection::connectToServer(const std::string &host, const std::uint16_t port) const
@@ -45,8 +45,9 @@ void TcpClientConnection::onConnected()
     std::cout << "Connected successfully" << std::endl;
 }
 
-void TcpClientConnection::onDisconnected() const
+void TcpClientConnection::onDisconnected()
 {
+    m_buffer.clear();
     std::cout << "Disconnected successfully" << std::endl;
 }
 

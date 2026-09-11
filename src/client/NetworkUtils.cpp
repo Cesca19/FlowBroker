@@ -23,6 +23,8 @@ std::optional<std::uint16_t> parsePort(const std::string_view text)
 std::optional<std::string> parseHost(const std::string &text)
 {
     QHostAddress address;
+    // QHostAddress only accepts numeric literals, so a hostname such as
+    // "localhost" is rejected here. The client connects by address only.
     if (!address.setAddress(QString::fromStdString(text)))
         return std::nullopt;
     return text;

@@ -44,6 +44,10 @@ void TopicGraph::addPoint(const qint64 tsMs, const double value) const
         m_lineSeries->remove(0);
 
     // X axis: sliding time window, from the oldest kept point to the newest.
+    // s_maxPoints bounds the history by count, this bounds it by duration: at a
+    // high message rate the kept points may span far less than the window, and
+    // the range is then stretched back so the scale stays stable instead of
+    // zooming in and out at every point.
     const QDateTime newest = QDateTime::fromMSecsSinceEpoch(tsMs);
     const qint64 oldestMs = static_cast<qint64>(m_lineSeries->at(0).x());
     QDateTime oldest = QDateTime::fromMSecsSinceEpoch(oldestMs);

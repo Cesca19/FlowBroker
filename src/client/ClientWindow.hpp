@@ -17,7 +17,20 @@
 #include "NetworkUtils.hpp"
 #include "ClientSession.hpp"
 
-
+/**
+ * @class ClientWindow
+ * @brief Main window: It holds the connection form, and one live chart per topic.
+ *
+ * Top of the client. It owns the ClientSession and is the only class that
+ * touches widgets: it validates what the user typed before any connection is
+ * attempted, reflects the connection state on the form and the button, and
+ * creates a TopicGraph the first time a value arrives for a topic.
+ *
+ * The command line arguments only pre-fill the form; nothing is validated or
+ * connected until the user clicks Connect. Charts are held in a scroll area, so
+ * subscribing to many topics stays usable. Reaching the connected state
+ * triggers the HELLO that opens the session.
+ */
 class ClientWindow : public QWidget {
     Q_OBJECT
 public:
@@ -27,8 +40,12 @@ private:
 signals:
 private slots:
     void onAddMessageRequested(const QString &messageTitle, const QString &messageContent, MessageType messageType);
+
+    /// Validate the form, then connect or disconnect depending on the state.
     void onConnectButtonClicked();
     void onNewTopicReceived(const QString &topicName, const qint64 tsMs, const double value);
+
+    /// Update the form and the button, and react to the edges of the state.
     void onTcpConnectionStateChanged(ConnectionState connectionState);
 private:
     TopicGraph* findOrCreateGraph(const QString& topicName);

@@ -2,6 +2,32 @@
 // Created by fran on 06/07/2026.
 //
 
+/**
+ * @file main.cpp
+ * @brief Entry point of the FlowBroker client.
+ *
+ * Parses the command line, then opens the main window. The client subscribes to
+ * the topics it cares about and plots the values the server pushes back.
+ *
+ * Here is the path of a message through the client:
+ *   - The transport (TcpClientConnection) owns the control socket and 
+ *      receives the incoming messages.
+ *   - The session (ClientSession) implements the control protocol: it formats the
+ *     commands going out, parses the lines coming in, and re-emits them as
+ *     typed signals.
+ *   - The window (ClientWindow) validates the connection settings and reflects
+ *     the connection state in the form.
+ *   - The charts (TopicGraph, one per topic, created on demand) plot the values
+ *     against time.
+ *
+ * Everything runs on the Qt event loop of the main thread. The
+ * socket is asynchronous, so waiting on the network never blocks the interface,
+ * and no shared state needs protecting anywhere in the client.
+ * 
+ * The arguments are optional and only pre-fill the connection form: an invalid
+ * port is silently ignored here and simply leaves its default in place.
+ */
+
 #include <iostream>
 #include "ClientWindow.hpp"
 
