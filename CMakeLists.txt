@@ -95,6 +95,7 @@ add_executable(${CLIENT}
         src/client/ClientWindow.cpp
         src/client/NetworkUtils.cpp
         src/client/ClientSession.cpp
+        src/client/UdpReceiver.cpp
 )
 target_compile_features(${CLIENT} PRIVATE cxx_std_17)
 

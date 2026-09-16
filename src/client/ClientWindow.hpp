@@ -47,9 +47,12 @@ private slots:
 
     /// Update the form and the button, and react to the edges of the state.
     void onTcpConnectionStateChanged(ConnectionState connectionState);
+
 private:
     TopicGraph* findOrCreateGraph(const QString& topicName);
     void clearGraphs();
+    void onUdpConnectionEstablished();
+    void onUdpConnectionFailed(const QString &errorMessage);
     void onTcpClientConnected() const;
 
     int m_tcpPort;

@@ -38,6 +38,8 @@ ClientWindow::ClientWindow(const std::string &host, const int tcpPort, const int
     connect(m_clientSession, &ClientSession::addMessage, this, &ClientWindow::onAddMessageRequested);
     connect(m_clientSession, &ClientSession::newTopicReceived, this, &ClientWindow::onNewTopicReceived);
     connect(m_clientSession, &ClientSession::tcpConnectionStateChanged, this, &ClientWindow::onTcpConnectionStateChanged);
+    connect(m_clientSession, &ClientSession::udpConnectionEstablished, this, &ClientWindow::onUdpConnectionEstablished);
+    connect(m_clientSession, &ClientSession::udpConnectionFailed, this, &ClientWindow::onUdpConnectionFailed);
     connect(m_connectBtn, &QPushButton::clicked, this, &ClientWindow::onConnectButtonClicked);
 }
 
@@ -60,7 +62,7 @@ void ClientWindow::onConnectButtonClicked()
 {
     if (m_tcpConnectionState == ConnectionState::Connected) {
         m_clientSession->disconnectTcpClient();
-        // close the udp socket
+        m_clientSession->disconnectUdpReceiver();
         return;
     }
 
@@ -83,8 +85,7 @@ void ClientWindow::onConnectButtonClicked()
     m_host = *host;
     m_tcpPort = *tcpPort;
     m_udpPort = *udpPort;
-    // connect the udp socket : on fail return : on success connect the tcp socket then send Hello
-    m_clientSession->connectTcpClient(m_host, m_tcpPort);
+    m_clientSession->connectUdpReceiver(m_udpPort);
 }
 
 void ClientWindow::onNewTopicReceived(const QString &topicName, const qint64 tsMs, const double value)
@@ -144,7 +145,18 @@ void ClientWindow::clearGraphs()
     m_graphsByTopic.clear();
 }
 
+void ClientWindow::onUdpConnectionEstablished()
+{
+    m_clientSession->connectTcpClient(m_host, m_tcpPort);
+}
+
+void ClientWindow::onUdpConnectionFailed(const QString &errorMessage)
+{
+    onAddMessageRequested("FlowBroker Client", errorMessage + "\n Try using another udp port", MessageType::Error);
+}
+
 void ClientWindow::onTcpClientConnected() const
 {
     m_clientSession->sendHello(m_udpPort);
+    m_clientSession->subscribeToTopic("AAPL");
 }

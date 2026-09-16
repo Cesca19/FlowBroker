@@ -5,6 +5,7 @@
 #ifndef FLOWBROKER_CLIENTSESSION_HPP
 #define FLOWBROKER_CLIENTSESSION_HPP
 
+#include "UdpReceiver.hpp"
 #include "TcpClientConnection.hpp"
 
 /**
@@ -21,15 +22,19 @@ public:
     explicit ClientSession(QObject *parent = nullptr);
     void connectTcpClient(const std::string &host, std::uint16_t port) const;
     void disconnectTcpClient() const;
+    void connectUdpReceiver(int udpPort) const;
+    void disconnectUdpReceiver() const;
 signals:
     void tcpConnectionStateChanged(ConnectionState connectionState);
+    void addMessage(const QString &messageTitle, const QString &messageContent, MessageType messageType = MessageType::Info);
+    void udpConnectionEstablished();
+    void udpConnectionFailed(const QString &errorMessage);
     /// One data point of a topic, ready to be plotted.
     void newTopicReceived(const QString &topicName, qint64 tsMs, double value);
-    void addMessage(const QString &messageTitle, const QString &messageContent, MessageType messageType = MessageType::Info);
 private slots:
     /// Identify one received line and route it to its parsing function.
     void handleTcpServerMessage(const QString &messageContent);
-
+    void handleUdpReceiverMessage(const QString &messageContent);
 public slots:
     void sendHello(int udpPort) const;
     void getTopics() const;
@@ -42,6 +47,7 @@ private:
     void onNewTopicSnapshotReceived(const QStringList &message);
 
     TcpClientConnection *m_tcpConnection;
+    UdpReceiver *m_udpReceiver;
 };
 
 

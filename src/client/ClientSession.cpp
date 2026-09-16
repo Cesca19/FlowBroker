@@ -8,12 +8,17 @@
 ClientSession::ClientSession(QObject *parent)
     : QObject(parent)
     , m_tcpConnection(nullptr)
+    , m_udpReceiver(nullptr)
 {
     m_tcpConnection = new TcpClientConnection(this);
     connect(m_tcpConnection, &TcpClientConnection::addMessage, this, &ClientSession::addMessage);
     connect(m_tcpConnection, &TcpClientConnection::connectionStateChanged, this, &ClientSession::tcpConnectionStateChanged);
-
     connect(m_tcpConnection, &TcpClientConnection::messageReceived, this, &ClientSession::handleTcpServerMessage);
+
+    m_udpReceiver = new UdpReceiver(this);
+    connect(m_udpReceiver, &UdpReceiver::updConnectionEstablished, this, &ClientSession::udpConnectionEstablished);
+    connect(m_udpReceiver, &UdpReceiver::udpConnectionFailed, this, &ClientSession::udpConnectionFailed);
+    connect(m_udpReceiver, &UdpReceiver::messageReceived, this, &ClientSession::handleUdpReceiverMessage);
 }
 
 void ClientSession::connectTcpClient(const std::string &host, const std::uint16_t port) const
@@ -24,6 +29,16 @@ void ClientSession::connectTcpClient(const std::string &host, const std::uint16_
 void ClientSession::disconnectTcpClient() const
 {
     m_tcpConnection->disconnectFromServer();
+}
+
+void ClientSession::connectUdpReceiver(int udpPort) const
+{
+    m_udpReceiver->start(udpPort);
+}
+
+void ClientSession::disconnectUdpReceiver() const
+{
+   m_udpReceiver->close();
 }
 
 void ClientSession::handleTcpServerMessage(const QString &message)
@@ -61,14 +76,19 @@ void ClientSession::handleTcpServerMessage(const QString &message)
         return;
     }
     std::cout << "ClientSession - Unknown message: " << message.toStdString() << std::endl;
-    // const QStringList parts = message.split(';');
 
-    // if (parts.isEmpty())
-    //     return;
-    // const QString type = parts[0];
-    // if (type == "TOPIC")
-    //     onNewTopicSnapshotReceived(parts);
-    // // std::cout << "-" << message.toStdString() << "-" << std::endl;
+}
+
+void ClientSession::handleUdpReceiverMessage(const QString &messageContent)
+{
+    const QStringList parts = messageContent.split(';');
+
+    if (parts.isEmpty())
+        return;
+    const QString type = parts[0];
+    if (type == "TOPIC")
+        onNewTopicSnapshotReceived(parts);
+    // std::cout << "-" << message.toStdString() << "-" << std::endl;
 }
 
 void ClientSession::sendHello(const int m_udpPort) const
