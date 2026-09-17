@@ -13,6 +13,8 @@ UdpReceiver::UdpReceiver(QObject *parent)
 
 void UdpReceiver::start(int udpPort)
 {
+    if (m_udpSocket->state() != QAbstractSocket::UnconnectedState)
+        m_udpSocket->close();
     if (m_udpSocket->bind(QHostAddress(QHostAddress::AnyIPv4), udpPort))
         emit updConnectionEstablished();
     else

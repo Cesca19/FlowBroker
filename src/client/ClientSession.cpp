@@ -47,8 +47,8 @@ void ClientSession::handleTcpServerMessage(const QString &message)
 
     if (parts.isEmpty())
         return;
-    if (parts[0] == "200") {
-        // OK message, after hello or bye
+    if (parts.size() >= 2 && parts[0] == "200" && parts[1] == "OK") {
+        onOkMessageReceived(parts);
         return;
     }
     if (parts[0] == "201") {
@@ -63,8 +63,8 @@ void ClientSession::handleTcpServerMessage(const QString &message)
         // 203 ALERT_SET id=<int>
         return;
     }
-    if (parts[0] == "210") {
-        // 210 TOPICS <name>:<TYPE> <name>:<TYPE> ...
+    if (parts.size() >= 2 && parts[0] == "210" && parts[1] == "TOPICS") {
+        onTopicsListReceived(parts);
         return;
     }
     if (parts[0] == "300") {
@@ -91,9 +91,9 @@ void ClientSession::handleUdpReceiverMessage(const QString &messageContent)
     // std::cout << "-" << message.toStdString() << "-" << std::endl;
 }
 
-void ClientSession::sendHello(const int m_udpPort) const
+void ClientSession::sendHello(const int udpPort) const
 {
-    m_tcpConnection->sendMessage("HELLO udp_port=" + std::to_string(m_udpPort));
+    m_tcpConnection->sendMessage("HELLO udp_port=" + std::to_string(udpPort));
 }
 
 void ClientSession::getTopics() const
@@ -114,14 +114,47 @@ void ClientSession::unSubscribeFromTopic(const std::string &topicName) const
 void ClientSession::createAlert(const std::string &topicName, const std::string &topicField,
     const std::string &op, const double value) const
 {
-    const std::string alertMessage = "ALERT " + topicName + " " +
-        topicField + " " +  op  + " " + std::to_string(value);
+    const std::string alertMessage = "ALERT " + topicName + " " + topicField + " " + op + " "
+        + QString::number(value, 'f', 6).toStdString();
     m_tcpConnection->sendMessage(alertMessage);
 }
 
 void ClientSession::sendBye() const
 {
     m_tcpConnection->sendMessage("BYE");
+}
+
+void ClientSession::onOkMessageReceived(QStringList messageParts)
+{
+    if (messageParts.size() == 3)
+        onSessionIdReceived(messageParts);
+    if (messageParts.size() == 2) {
+        // bye request validated
+    }
+}
+
+void ClientSession::onSessionIdReceived(QStringList messageParts)
+{
+    QString sessionStr = messageParts[2];
+    QStringList sessionSplit = sessionStr.split("=");
+
+    if (sessionSplit.size() != 2 || sessionSplit[0] != "session")
+        return;
+    emit tcpSessionReady(sessionSplit[1].toInt());
+}
+
+void ClientSession::onTopicsListReceived(QStringList messageParts)
+{
+    std::vector<TopicDescriptor> availableTopics;
+
+    for (int i = 2; i < messageParts.size(); i++) {
+        QStringList topicDesc = messageParts[i].split(":");
+
+        if (topicDesc.size() != 2)
+            continue;
+        availableTopics.push_back(TopicDescriptor{ topicDesc[0].toStdString(), streamTypeFromString(topicDesc[1]) });
+    }
+    emit topicsListReady(availableTopics);
 }
 
 void ClientSession::onNewTopicSnapshotReceived(const QStringList &message)
@@ -137,4 +170,15 @@ void ClientSession::onNewTopicSnapshotReceived(const QStringList &message)
     // const double max = message[6].toDouble();
 
     emit newTopicReceived(topicName, tsNs / 1'000'000, value);
+}
+
+StreamType ClientSession::streamTypeFromString(QString name)
+{
+    if (name == "FINANCE")
+        return StreamType::FINANCE;
+    if (name == "WEATHER")
+        return StreamType::WEATHER;
+    if (name == "SENSOR")
+        return StreamType::SENSOR;
+    return StreamType::UNKNOWN;
 }

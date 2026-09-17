@@ -3,6 +3,9 @@
 //
 
 #include "ClientWindow.hpp"
+#include <QHBoxLayout>
+#include <QCheckBox>
+#include <QDebug>
 
 ClientWindow::ClientWindow(const std::string &host, const int tcpPort, const int udpPort, QWidget *parent)
     : QWidget(parent)
@@ -12,6 +15,8 @@ ClientWindow::ClientWindow(const std::string &host, const int tcpPort, const int
     , m_tcpConnectionState(ConnectionState::Disconnected)
     , m_connectBtn(nullptr)
     , m_graphsLayout(nullptr)
+    , m_topicsBox(nullptr)
+    , m_topicsLayout(nullptr)
 {
     auto* rootLayout = new QVBoxLayout(this);
     auto* graphsContainer = new QWidget();
@@ -20,17 +25,25 @@ ClientWindow::ClientWindow(const std::string &host, const int tcpPort, const int
     auto* scrollArea = new QScrollArea();
     scrollArea->setWidget(graphsContainer);
     scrollArea->setWidgetResizable(true);   // container follows the scroll area width
+    
+    m_topicsBox = new QGroupBox(tr("Available Topics"));
+    m_topicsLayout = new QGridLayout(m_topicsBox);
 
     auto *formLayout = new QFormLayout();
     m_hostEdit = new QLineEdit(QString::fromStdString(host));
     m_tcpPortEdit = new QLineEdit(QString::number(tcpPort));
     m_udpPortEdit = new QLineEdit(QString::number(udpPort));
+    
     formLayout->addRow("Host", m_hostEdit);
     formLayout->addRow("TCP port", m_tcpPortEdit);
     formLayout->addRow("UDP port", m_udpPortEdit);
-    rootLayout->addLayout(formLayout);
+    formLayout->addRow(m_connectBtn);
 
-    rootLayout->addWidget(m_connectBtn);
+    auto *rowLayout = new QHBoxLayout();
+    rowLayout->addLayout(formLayout);
+    rowLayout->addWidget(m_topicsBox);
+    
+    rootLayout->addLayout(rowLayout);
     rootLayout->addWidget(scrollArea);
     resize(800, 800);
 
@@ -40,6 +53,9 @@ ClientWindow::ClientWindow(const std::string &host, const int tcpPort, const int
     connect(m_clientSession, &ClientSession::tcpConnectionStateChanged, this, &ClientWindow::onTcpConnectionStateChanged);
     connect(m_clientSession, &ClientSession::udpConnectionEstablished, this, &ClientWindow::onUdpConnectionEstablished);
     connect(m_clientSession, &ClientSession::udpConnectionFailed, this, &ClientWindow::onUdpConnectionFailed);
+    connect(m_clientSession, &ClientSession::tcpSessionReady, this, &ClientWindow::onTcpSessionReady);
+    connect(m_clientSession, &ClientSession::topicsListReady, this, &ClientWindow::onTopicsListReady);
+
     connect(m_connectBtn, &QPushButton::clicked, this, &ClientWindow::onConnectButtonClicked);
 }
 
@@ -62,7 +78,6 @@ void ClientWindow::onConnectButtonClicked()
 {
     if (m_tcpConnectionState == ConnectionState::Connected) {
         m_clientSession->disconnectTcpClient();
-        m_clientSession->disconnectUdpReceiver();
         return;
     }
 
@@ -119,6 +134,8 @@ void ClientWindow::onTcpConnectionStateChanged(const ConnectionState connectionS
         case ConnectionState::Disconnected:
             m_connectBtn->setEnabled(true);
             m_connectBtn->setText("Connect");
+            m_clientSession->disconnectUdpReceiver();
+            clearTopicButtons();
             clearGraphs();
             break;
         default:
@@ -136,6 +153,13 @@ TopicGraph * ClientWindow::findOrCreateGraph(const QString &topicName)
     m_graphsLayout->addWidget(graph);
     m_graphsByTopic.insert(topicName, graph);
     return graph;
+}
+
+void ClientWindow::removeGraph(const QString &topicName)
+{
+    TopicGraph *graph = m_graphsByTopic.take(topicName); // take remove the item from the hash
+    if (graph)
+        graph->deleteLater();
 }
 
 void ClientWindow::clearGraphs()
@@ -158,5 +182,62 @@ void ClientWindow::onUdpConnectionFailed(const QString &errorMessage)
 void ClientWindow::onTcpClientConnected() const
 {
     m_clientSession->sendHello(m_udpPort);
-    m_clientSession->subscribeToTopic("AAPL");
+}
+
+void ClientWindow::onTcpSessionReady(int sessionId)
+{
+    qDebug() << "Session Id" << sessionId;
+    m_clientSession->getTopics();
+}
+
+void ClientWindow::onTopicsListReady(std::vector<TopicDescriptor> availableTopics)
+{
+    clearTopicButtons();
+
+    static constexpr int s_topicColumns = 3;
+    int index = 0;
+    for (const TopicDescriptor &topic : availableTopics) {
+        const QString topicName = QString::fromStdString(topic.name);
+        auto *button = new QCheckBox(topicName + " - " + streamTypeToString(topic.type));
+
+        connect(button, &QCheckBox::toggled, this, [this, topicName](const bool checked) {
+            this->onTopicToggled(topicName, checked);
+        });
+        m_topicsLayout->addWidget(button, index / s_topicColumns, index % s_topicColumns);
+        index++;
+        m_topicButtonsByName.insert(topicName, button);
+    }
+}
+
+void ClientWindow::onTopicToggled(const QString &topicName, bool checked)
+{
+    if (checked) {
+        m_clientSession->subscribeToTopic(topicName.toStdString());
+    } else {
+        m_clientSession->unSubscribeFromTopic(topicName.toStdString());
+        removeGraph(topicName);
+    }
+}
+
+void ClientWindow::clearTopicButtons()
+{
+    for (QCheckBox *button : m_topicButtonsByName)
+        button->deleteLater();
+    
+    m_topicButtonsByName.clear();
+}
+
+QString ClientWindow::streamTypeToString(StreamType type)
+{
+    switch (type)
+    {
+    case StreamType::FINANCE:
+        return "FINANCE";
+    case StreamType::WEATHER:
+        return "WEATHER";
+    case StreamType::SENSOR:
+        return "SENSOR";
+    default:
+        return "UNKNOWN";
+    };
 }

@@ -12,7 +12,10 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QVBoxLayout>
+#include <QGridLayout>
 #include <QMessageBox>
+#include <QGroupBox>
+#include <QCheckBox>
 #include "TopicGraph.hpp"
 #include "NetworkUtils.hpp"
 #include "ClientSession.hpp"
@@ -47,13 +50,19 @@ private slots:
 
     /// Update the form and the button, and react to the edges of the state.
     void onTcpConnectionStateChanged(ConnectionState connectionState);
-
 private:
     TopicGraph* findOrCreateGraph(const QString& topicName);
+    void removeGraph(const QString &topicName);
     void clearGraphs();
     void onUdpConnectionEstablished();
     void onUdpConnectionFailed(const QString &errorMessage);
     void onTcpClientConnected() const;
+    void onTcpSessionReady(int sessionId);
+    void onTopicsListReady(std::vector<TopicDescriptor> availableTopics);
+    void onTopicToggled(const QString &topicName, bool checked);
+    void clearTopicButtons();
+
+    static QString streamTypeToString(StreamType type);
 
     int m_tcpPort;
     int m_udpPort;
@@ -66,6 +75,9 @@ private:
     QPushButton *m_connectBtn;
     QVBoxLayout* m_graphsLayout{};
     QHash<QString, TopicGraph*> m_graphsByTopic;
+    QGroupBox *m_topicsBox;
+    QGridLayout *m_topicsLayout;
+    QHash<QString, QCheckBox *> m_topicButtonsByName;
 };
 
 

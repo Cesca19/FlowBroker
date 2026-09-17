@@ -7,6 +7,7 @@
 
 #include "UdpReceiver.hpp"
 #include "TcpClientConnection.hpp"
+#include "../common/TopicDescriptor.hpp"
 
 /**
  * @class ClientSession
@@ -31,6 +32,8 @@ signals:
     void udpConnectionFailed(const QString &errorMessage);
     /// One data point of a topic, ready to be plotted.
     void newTopicReceived(const QString &topicName, qint64 tsMs, double value);
+    void tcpSessionReady(int sessionId);
+    void topicsListReady(std::vector<TopicDescriptor> availableTopics);
 private slots:
     /// Identify one received line and route it to its parsing function.
     void handleTcpServerMessage(const QString &messageContent);
@@ -44,8 +47,12 @@ public slots:
         double value) const;
     void sendBye() const;
 private:
+    void onOkMessageReceived(QStringList messageParts);
+    void onSessionIdReceived(QStringList messageParts);
+    void onTopicsListReceived(QStringList messageParts);
     void onNewTopicSnapshotReceived(const QStringList &message);
-
+    
+    static StreamType streamTypeFromString(QString name);
     TcpClientConnection *m_tcpConnection;
     UdpReceiver *m_udpReceiver;
 };
